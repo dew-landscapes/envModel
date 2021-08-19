@@ -21,11 +21,15 @@
 
   }
 
-  random_forest_good <- function(envdf, clustcol = "cluster"
-                                 , sitecol = "cell", envnames
-                                 , starttrees = 99, addtrees = 499
-                                 , rfcores = 1, stabilise = TRUE
-                                , outfile = fs::path("out","rfGood.rds")
+  random_forest_good <- function(envdf
+                                 , clustcol = "cluster"
+                                 , sitecol = "cell"
+                                 , envnames
+                                 , starttrees = 99
+                                 , addtrees = 499
+                                 , rfcores = 1
+                                 , stabilise = TRUE
+                                 , outfile = fs::path("out","rfgood.rds")
                                  ) {
 
     rf_simple <- function(trees = starttrees, cores = rfcores, df = envdf) {
@@ -41,38 +45,38 @@
               , .combine=randomForest::combine
               , .packages = c("randomForest")
               , .export = c("useMtry")
-      ) %dopar%
+              ) %dopar%
         randomForest::randomForest(x = x
                                    , y = y
                                    , ntree = ntree
                                    , importance = TRUE
                                    , mtry = useMtry
-        )
+                                   )
 
     }
 
     # Iteratively add trees to a random forest with tibble output
-    add_row_rf_simple <- function(resDf,rowGrow = addtrees) {
+    add_row_rf_simple <- function(resdf,rowgrow = addtrees) {
 
-      prevRf <- resDf$rf[nrow(resDf)][[1]]
+      prevrf <- resdf$rf[nrow(resdf)][[1]]
 
-      nextRf <- rf_simple(rowGrow)
+      nextrf <- rf_simple(rowgrow)
 
-      newRf <- randomForest::combine(prevRf,nextRf)
+      newRf <- randomForest::combine(prevrf,nextrf)
 
-      resDf %>%
+      resdf %>%
         dplyr::bind_rows(tibble(start = Sys.time()
-                                , run = max(resDf$run) + 1
+                                , run = max(resdf$run) + 1
                                 ) %>%
-          dplyr::mutate(trees = max(resDf$trees) + rowGrow
+          dplyr::mutate(trees = max(resdf$trees) + rowgrow
                         , rf = list(newRf)
                         #, rfProbCell = map(rf,rf_prob_cell)
                         #, meanVotesCell = map_dbl(rfProbCell,~mean(.$votes))
                         #, rfProbClass = map(rfProbCell,rf_prob_class)
                         #, meanVotesClass = map_dbl(rfProbClass,~mean(.$votes))
-                        , deltaPrev = map_dbl(rf
+                        , deltaprev = map_dbl(rf
                                               , ~tibble(last = .$predicted
-                                                        , prev = prevRf$predicted
+                                                        , prev = prevrf$predicted
                                                         ) %>%
                                                 dplyr::mutate(rows = nrow(.)
                                                               , same = last == prev
@@ -80,11 +84,11 @@
                                                 dplyr::summarise(same = sum(same)/mean(rows)) %>%
                                                 dplyr::pull(same)
                                               )
-                        , kappaPrevRf = map_dbl(rf
-                                                ,~caret::confusionMatrix(.$predicted
-                                                                         ,prevRf$predicted
-                                                                         )$overall[["Kappa"]]
-                                                )
+                        , kappaprev = map_dbl(rf
+                                              ,~caret::confusionMatrix(.$predicted
+                                                                       ,prevrf$predicted
+                                                                       )$overall[["Kappa"]]
+                                              )
                         , end = Sys.time()
                         )
           ) %>%
@@ -92,7 +96,7 @@
 
     }
 
-    rfGood <- list()
+    rfgood <- list()
 
     # Training control for caret implementation of machine learning methods
     ctrl <- caret::trainControl(method = "cv"
@@ -106,65 +110,64 @@
     # Tuning grid
     cTuneGrid <- expand.grid(.mtry = 1:floor(sqrt(length(envnames))))
 
-    library(doParallel)
-    cl <- makePSOCKcluster(rfcores)
-    registerDoParallel(cl)
+    cl <- parallel::makePSOCKcluster(rfcores)
+    doParallel::registerDoParallel(cl)
 
-    rfGood$rfMtry <- caret::train(cluster ~ .
-                           , data = envdf %>% dplyr::select(-!!ensym(sitecol))
-                           , method = "rf"
-                           , trControl = ctrl
-                           , tuneGrid = cTuneGrid
-                           , metric = "Kappa"
-                           , trace = FALSE
-                           )
+    rfgood$rfMtry <- caret::train(cluster ~ .
+                                  , data = envdf %>% dplyr::select(-!!ensym(sitecol))
+                                  , method = "rf"
+                                  , trControl = ctrl
+                                  , tuneGrid = cTuneGrid
+                                  , metric = "Kappa"
+                                  , trace = FALSE
+                                  )
 
-    useMtry <- rfGood$rfMtry %>%
+    useMtry <- rfgood$rfMtry %>%
       `[[` ("finalModel") %>%
       `[[` ("mtry")
 
-    rfGood$rfTrees <- tibble(start = Sys.time()
-                      , run = 1
-                      , trees = initialTrees
-                      , rf = list(rf_simple(initialTrees))
-                      #, rfProbCell = map(rf,rf_res)
-                      #, meanVotesCell = map_dbl(rfProbCell,~mean(.$votes))
-                      #, rfProbClass = map(rfProbCell,rf_prob_class)
-                      #, meanVotesClass = map_dbl(rfProbClass,~mean(.$votes))
-                      , end = Sys.time()
-                      , seconds = as.numeric(difftime(end,start, units = "secs"))
-                      ) %>%
-      add_row_rf_simple(rowGrow = addtrees)
+    rfgood$rftrees <- tibble::tibble(start = Sys.time()
+                                     , run = 1
+                                     , trees = initialTrees
+                                     , rf = list(rf_simple(initialTrees))
+                                     #, rfProbCell = map(rf,rf_res)
+                                     #, meanVotesCell = map_dbl(rfProbCell,~mean(.$votes))
+                                     #, rfProbClass = map(rfProbCell,rf_prob_class)
+                                     #, meanVotesClass = map_dbl(rfProbClass,~mean(.$votes))
+                                     , end = Sys.time()
+                                     , seconds = as.numeric(difftime(end,start, units = "secs"))
+                                     ) %>%
+      add_row_rf_simple(rowgrow = addtrees)
 
     if(stabilise) {
 
-      while(as.logical((rfGood$rfTrees$kappaPrevRf[[nrow(rfGood$rfTrees)]] <= 0.995) *
-                       (rfGood$rfTrees$deltaPrev[[nrow(rfGood$rfTrees)]] <= 0.995) *
-                       (rfGood$rfTrees$rf[[nrow(rfGood$rfTrees)]]$ntree < 9999)
+      while(as.logical((rfgood$rftrees$kappaprevrf[[nrow(rfgood$rftrees)]] <= 0.995) *
+                       (rfgood$rftrees$deltaPrev[[nrow(rfgood$rftrees)]] <= 0.995) *
+                       (rfgood$rftrees$rf[[nrow(rfgood$rftrees)]]$ntree < 9999)
                        )
             ) {
 
-        rfGood$rfTrees <- rfGood$rfTrees %>%
-          add_row_rf_simple(rowGrow = addtrees)
+        rfgood$rftrees <- rfgood$rftrees %>%
+          add_row_rf_simple(rowgrow = addtrees)
 
         cat(
-          paste0("ntree: ", rfGood$rfTrees$rf[[nrow(rfGood$rfTrees)]]$ntree
-                 #, "\nmean votes cell: ",round(rfTrees$meanVotesCell[nrow(rfTrees)],4)
-                 , "\n changed predictions: ",paste0(round(100-100*rfGood$rfTrees$deltaPrev[nrow(rfGood$rfTrees)],3),"%")
-                 , "\n kappa based on confusion with last run: ", round(rfGood$rfTrees$kappaPrevRf[[nrow(rfGood$rfTrees)]],4)
-                 , "\n time: ",round(rfGood$rfTrees$seconds[[nrow(rfGood$rfTrees)]],2)," seconds\n\n"
+          paste0("ntree: ", rfgood$rftrees$rf[[nrow(rfgood$rftrees)]]$ntree
+                 #, "\nmean votes cell: ",round(rftrees$meanVotesCell[nrow(rftrees)],4)
+                 , "\n changed predictions: ",paste0(round(100-100*rfgood$rftrees$deltaPrev[nrow(rfgood$rftrees)],3),"%")
+                 , "\n kappa based on confusion with last run: ", round(rfgood$rftrees$kappaprevrf[[nrow(rfgood$rftrees)]],4)
+                 , "\n time: ",round(rfgood$rftrees$seconds[[nrow(rfgood$rftrees)]],2)," seconds\n\n"
+                 )
           )
-        )
 
-      }
+        }
 
     }
 
     stopCluster(cl)
 
-    rio::export(rfGood,outfile)
+    rio::export(rfgood,outfile)
 
-    return(rfGood)
+    return(rfgood)
 
   }
 
