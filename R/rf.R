@@ -18,12 +18,12 @@
                            , out_file
                            ) {
 
-    x <- df[,which(names(df) %in% env_cols)]
-    y <- df %>% dplyr::pull(!!ensym(clust_col))
+    x_df <- df[,which(names(df) %in% env_cols)]
+    y_vec <- df %>% dplyr::pull(!!ensym(clust_col))
 
     # Assumes envData exists and is ready to go
-    rf <- randomForest::randomForest(x = x
-                                 , y = y
+    rf <- randomForest::randomForest(x = x_df
+                                 , y = y_vec
                                  , ntree = trees
                                  )
 
@@ -34,7 +34,7 @@
   }
 
 
-  make_rf_simple <- function(x_df
+  make_rf_quick <- function(x_df
                              , y_vec
                              , trees = 499
                              , cl_obj = NULL
@@ -43,7 +43,7 @@
 
     rf_cores <- if(isTRUE(is.null(cl_obj))) 1 else length(cl_obj)
 
-    foreach(ntree = rep(ceiling(trees/rf_cores), rf_cores)
+    foreach::`%dopar%`(ntree = rep(ceiling(trees/rf_cores), rf_cores)
             , .combine = randomForest::combine
             , .packages = c("randomForest")
             ) %dopar%
@@ -96,10 +96,9 @@
     x <- env_df[,which(names(env_df) %in% env_names)]
     y <- env_df[clust_col][[1]]
 
-    `%dopar%` <- foreach::`%dopar%`
-
     rf_good <- list()
 
+    # setup parallel cluster
     cl <- parallel::makePSOCKcluster(rf_cores)
     doParallel::registerDoParallel(cl)
 
