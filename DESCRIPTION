@@ -23,6 +23,7 @@ Imports:
     caret,
     doParallel,
     dplyr,
+    foreach,
     parallel,
     randomForest,
     rio,
