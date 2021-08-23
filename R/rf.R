@@ -96,6 +96,8 @@
     x <- env_df[,which(names(env_df) %in% env_names)]
     y <- env_df[clust_col][[1]]
 
+    `%dopar%` <- foreach::`%dopar%`
+
     rf_good <- list()
 
     cl <- parallel::makePSOCKcluster(rf_cores)
