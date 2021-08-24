@@ -27,9 +27,31 @@
                                  , ntree = trees
                                  )
 
-    conf <- caret::confusionMatrix(rf$predicted,df$cluster)
+    conf <- caret::confusionMatrix(rf$predicted,y_vec)
 
     rio::export(conf, out_file)
+
+  }
+
+
+
+  summarise_conf <- function(conf) {
+
+    user_accuracy <- conf$table
+
+    overall <- conf$overall %>%
+      as.data.frame() %>%
+      dplyr::rename(value = '.') %>%
+      tibble::rownames_to_column("diagnostic") %>%
+      tibble::as_tibble() %>%
+      dplyr::filter(diagnostic %in% c("Kappa","Accuracy"))
+
+
+    overall %>%
+      dplyr::bind_rows(class) %>%
+      dplyr::mutate(diagnostic = snakecase::to_snake_case(diagnostic)) %>%
+      tidyr::pivot_wider(names_from = "diagnostic", values_from = "value")
+
 
   }
 
@@ -148,6 +170,11 @@
                                              )
                               )
                     , seconds = Sys.time() - start
+                    , kappa = map_dbl(rf
+                                      , ~caret::confusionMatrix(.$predicted
+                                                               , y
+                                                               )$overall[["Kappa"]]
+                                      )
                     , delta_prev = 0.5
                     , kappa_prev = map_dbl(rf
                                            , ~caret::confusionMatrix(.$predicted
@@ -181,7 +208,7 @@
       new_rf <- randomForest::combine(prev_rf,next_rf)
 
       kappa <- caret::confusionMatrix(new_rf$predicted
-                                      , new_rf$y
+                                      , y
                                       )$overall[["Kappa"]]
 
       delta_prev <- sum(prev_rf$predicted == new_rf$predicted)/length(y)

@@ -17,6 +17,7 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
+RdMacros: Rdpack
 URL: https://github.com/Acanthiza/envModel
 BugReports: https://github.com/Acanthiza/envModel/issues
 Imports: 
@@ -26,5 +27,6 @@ Imports:
     foreach,
     parallel,
     randomForest,
+    Rdpack,
     rio,
     tibble
