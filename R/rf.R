@@ -43,7 +43,9 @@
 
     rf_cores <- if(isTRUE(is.null(cl_obj))) 1 else length(cl_obj)
 
-    foreach::`%dopar%`(ntree = rep(ceiling(trees/rf_cores), rf_cores)
+    `%dopar%` <- foreach::`%dopar%`
+
+    foreach::foreach(ntree = rep(ceiling(trees/rf_cores), rf_cores)
             , .combine = randomForest::combine
             , .packages = c("randomForest")
             ) %dopar%
@@ -138,7 +140,7 @@
              , trees = trees_start
              , start = Sys.time()
              ) %>%
-      dplyr::mutate(rf = list(make_rf_simple(x
+      dplyr::mutate(rf = list(make_rf_quick(x
                                              , y
                                              , trees = trees_start
                                              , cl_obj = cl
@@ -167,7 +169,7 @@
 
       start <- Sys.time()
 
-      next_rf <- make_rf_simple(x
+      next_rf <- make_rf_quick(x
                                 , y
                                 , trees = trees_add
                                 , cl_obj = cl
@@ -182,9 +184,9 @@
                                       , new_rf$y
                                       )$overall[["Kappa"]]
 
-      delta_prev <- sum(init_rf$predicted == new_rf$predicted)/length(y)
+      delta_prev <- sum(prev_rf$predicted == new_rf$predicted)/length(y)
 
-      kappa_prev <- caret::confusionMatrix(init_rf$predicted
+      kappa_prev <- caret::confusionMatrix(prev_rf$predicted
                                            , new_rf$predicted
                                            )$overall[["Kappa"]]
 
@@ -195,6 +197,7 @@
           , start = start
           , rf = list(new_rf)
           , seconds = rf_run_time
+          , kappa = kappa
           , delta_prev = delta_prev
           , kappa_prev = kappa_prev
           , ntree = new_rf$ntree
@@ -215,9 +218,9 @@
     parallel::stopCluster(cl)
     rm(cl)
 
-    if(!isTRUE(is.null(out_file))) rio::export(rfgood,out_file)
+    if(!isTRUE(is.null(out_file))) rio::export(rf_good,out_file)
 
-    return(rfgood)
+    return(rf_good)
 
   }
 
