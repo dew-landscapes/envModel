@@ -2,5 +2,5 @@
 
 export(kappa)
 export(make_env_clust_df)
-export(make_rf_conf)
+export(make_rf_diagnostics)
 export(make_rf_good)

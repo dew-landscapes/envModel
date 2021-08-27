@@ -11,25 +11,33 @@
 #' @export
 #'
 #' @examples
-  make_rf_conf <- function(df
+  make_rf_diagnostics <- function(df
                            , clust_col = "cluster"
                            , env_cols
                            , trees = 999
-                           , out_file
+                           , folds = 3
+                           , reps = 5
                            ) {
 
-    x_df <- df[,which(names(df) %in% env_cols)]
-    y_vec <- df %>% dplyr::pull(!!ensym(clust_col))
+    x_df <- df[,env_cols]
+    y_vec <- df[clust_col][[1]]
 
-    # Assumes envData exists and is ready to go
-    rf <- randomForest::randomForest(x = x_df
-                                 , y = y_vec
-                                 , ntree = trees
-                                 )
+    rf <- caret::train(x = x_df
+                       , y = y_vec
+                       , method = "rf"
+                       , ntree = trees
+                       , metric = "Kappa"
+                       , tuneLength = 1
+                       , trControl = caret::trainControl(method = "repeatedcv"
+                                                         , number = folds
+                                                         , repeats = reps
+                                                         , allowParallel = FALSE
+                                                         )
+                       )
 
-    conf <- caret::confusionMatrix(rf$predicted,y_vec)
-
-    rio::export(conf, out_file)
+    kappa(rf$finalModel$confusion[,-ncol(rf$finalModel$confusion)]
+          , by_class = FALSE
+          )
 
   }
 

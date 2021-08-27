@@ -40,8 +40,8 @@
                           na.omit()
                         ) %>%
       dplyr::mutate(!!ensym(clust_col) := factor(!!ensym(clust_col))) %>%
-      na.omit() %>%
-      dplyr::select(all_of(context),!!ensym(clust_col),all_of(env_cols))
+      dplyr::select(all_of(context),!!ensym(clust_col),all_of(env_cols)) %>%
+      na.omit()
 
     df <- if(set_min) df %>%
       dplyr::add_count(!!ensym(clust_col)) %>%
