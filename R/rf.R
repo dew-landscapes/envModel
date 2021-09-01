@@ -1,13 +1,19 @@
 
-#' Run a basic random forest, saving only the confusion matrix.
+#' Run random forest, usually returning only diagnostic values.
+#'
+#' Random forest is run via `caret::train`.
 #'
 #' @param df Dataframe with clusters, context and environmental columns.
 #' @param clust_col Character. Name of column with cluster membership.
 #' @param env_cols Character. Name of columns with environmental data.
 #' @param trees Numeric. How many trees in the forest?
-#' @param out_file Character. Path for saving the confusion matrix.
+#' @param folds Numeric. How many folds to use in repeated cross-validation.
+#' @param reps Numeric. How many reps to use in `rep`eated cross-validation.
+#' @param tune_length Numeric. Passed to `caret::train` argument `tuneLength`.
+#' @param save_rf Character. File name for saving the `train` object as (.rds).
 #'
-#' @return
+#' @return Tibble (row) of diagnostics
+#'
 #' @export
 #'
 #' @examples
@@ -17,6 +23,8 @@
                            , trees = 999
                            , folds = 3
                            , reps = 5
+                           , tune_length = 1
+                           , save_rf = NULL
                            ) {
 
     x_df <- df[,env_cols]
@@ -27,7 +35,7 @@
                        , method = "rf"
                        , ntree = trees
                        , metric = "Kappa"
-                       , tuneLength = 1
+                       , tuneLength = tune_length
                        , trControl = caret::trainControl(method = "repeatedcv"
                                                          , number = folds
                                                          , repeats = reps
@@ -35,31 +43,11 @@
                                                          )
                        )
 
+    if(isTRUE(!is.null(save_rf))) rio::export(rf, save_rf)
+
     kappa(rf$finalModel$confusion[,-ncol(rf$finalModel$confusion)]
           , by_class = FALSE
           )
-
-  }
-
-
-
-  summarise_conf <- function(conf) {
-
-    user_accuracy <- conf$table
-
-    overall <- conf$overall %>%
-      as.data.frame() %>%
-      dplyr::rename(value = '.') %>%
-      tibble::rownames_to_column("diagnostic") %>%
-      tibble::as_tibble() %>%
-      dplyr::filter(diagnostic %in% c("Kappa","Accuracy"))
-
-
-    overall %>%
-      dplyr::bind_rows(class) %>%
-      dplyr::mutate(diagnostic = snakecase::to_snake_case(diagnostic)) %>%
-      tidyr::pivot_wider(names_from = "diagnostic", values_from = "value")
-
 
   }
 
@@ -88,7 +76,7 @@
 
   }
 
-#' Title
+#' Iteratively add trees to random forest until predictions stabilise
 #'
 #' @param env_df Dataframe with `clust_col`, `site_col` and columns `env_names`
 #' @param clust_col Character. Name of the columns with clusters.
@@ -178,23 +166,24 @@
                                              )
                               )
                     , seconds = Sys.time() - start
-                    , kappa = map_dbl(rf
-                                      , ~caret::confusionMatrix(.$predicted
-                                                               , y
-                                                               )$overall[["Kappa"]]
-                                      )
+                    , conf = map(rf
+                                 , ~caret::confusionMatrix(.$predicted
+                                                           , y
+                                                           )
+                                 )
+                    , kappa = map(conf
+                                  , make_kappa_tibble
+                                  , by_class = FALSE
+                                  )
                     , delta_prev = 0.5
-                    , kappa_prev = map_dbl(rf
-                                           , ~caret::confusionMatrix(.$predicted
-                                                                  , .$y
-                                                                  )$overall[["Kappa"]]
-                                           )
                     , ntree = map_dbl(rf,"ntree")
-                    )
+                    ) %>%
+      tidyr::unnest(cols = c(kappa)) %>%
+      dplyr::mutate(prev_kappa = kappa)
 
     while(
       as.logical(
-        (rf_good$rf_res$kappa_prev[[nrow(rf_good$rf_res)]] <= 0.995) *
+        (rf_good$rf_res$prev_kappa[[nrow(rf_good$rf_res)]] <= 0.995) *
         (rf_good$rf_res$delta_prev[[nrow(rf_good$rf_res)]] <= 0.995) *
         (rf_good$rf_res$trees[[nrow(rf_good$rf_res)]] < 9999)
       )
@@ -215,15 +204,20 @@
 
       new_rf <- randomForest::combine(prev_rf,next_rf)
 
-      kappa <- caret::confusionMatrix(new_rf$predicted
+      conf <- caret::confusionMatrix(new_rf$predicted
                                       , y
-                                      )$overall[["Kappa"]]
+                                      )
+
+      kappa <- make_kappa_tibble(conf, by_class = FALSE)
 
       delta_prev <- sum(prev_rf$predicted == new_rf$predicted)/length(y)
 
-      kappa_prev <- caret::confusionMatrix(prev_rf$predicted
+      conf_prev <- caret::confusionMatrix(prev_rf$predicted
                                            , new_rf$predicted
-                                           )$overall[["Kappa"]]
+                                           )
+
+      kappa_prev <- make_kappa_tibble(conf_prev, by_class = FALSE) %>%
+        stats::setNames(paste0("prev_",names(.)))
 
       rf_good$rf_res <- rf_good$rf_res %>%
         dplyr::bind_rows(tibble(
@@ -232,18 +226,18 @@
           , start = start
           , rf = list(new_rf)
           , seconds = rf_run_time
-          , kappa = kappa
+          , kappa
           , delta_prev = delta_prev
-          , kappa_prev = kappa_prev
+          , kappa_prev
           , ntree = new_rf$ntree
           )
           )
 
       cat(
         paste0("ntree: ", rf_good$rf_res$rf[[nrow(rf_good$rf_res)]]$ntree
-               , "\n kappa: ",round(kappa,4)
+               , "\n kappa: ",round(rf_good$rf_res$kappa[[nrow(rf_good$rf_res)]],4)
                , "\n changed predictions: ",paste0(round(100-100*rf_good$rf_res$delta_prev[nrow(rf_good$rf_res)],3),"%")
-               , "\n kappa based on confusion with last run: ", round(rf_good$rf_res$kappa_prev[[nrow(rf_good$rf_res)]],4)
+               , "\n kappa based on confusion with last run: ", round(rf_good$rf_res$prev_kappa[[nrow(rf_good$rf_res)]],4)
                , "\n time: ",round(rf_good$rf_res$seconds[[nrow(rf_good$rf_res)]],2)," seconds\n\n"
         )
       )

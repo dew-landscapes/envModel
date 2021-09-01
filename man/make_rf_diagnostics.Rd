@@ -2,7 +2,7 @@
 % Please edit documentation in R/rf.R
 \name{make_rf_diagnostics}
 \alias{make_rf_diagnostics}
-\title{Run a basic random forest, saving only the confusion matrix.}
+\title{Run random forest, usually returning only diagnostic values.}
 \usage{
 make_rf_diagnostics(
   df,
@@ -10,7 +10,9 @@ make_rf_diagnostics(
   env_cols,
   trees = 999,
   folds = 3,
-  reps = 5
+  reps = 5,
+  tune_length = 1,
+  save_rf = NULL
 )
 }
 \arguments{
@@ -22,11 +24,17 @@ make_rf_diagnostics(
 
 \item{trees}{Numeric. How many trees in the forest?}
 
-\item{out_file}{Character. Path for saving the confusion matrix.}
+\item{folds}{Numeric. How many folds to use in repeated cross-validation.}
+
+\item{reps}{Numeric. How many reps to use in \code{rep}eated cross-validation.}
+
+\item{tune_length}{Numeric. Passed to \code{caret::train} argument \code{tuneLength}.}
+
+\item{save_rf}{Character. File name for saving the \code{train} object as (.rds).}
 }
 \value{
-
+Tibble (row) of diagnostics
 }
 \description{
-Run a basic random forest, saving only the confusion matrix.
+Random forest is run via \code{caret::train}.
 }

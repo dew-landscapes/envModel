@@ -13,7 +13,7 @@
 #' @export
 #'
 #' @examples
-kappa <- function(CM, by_class) {
+make_kappa_tibble <- function(CM, by_class) {
   #convert both data frames and vectors to matrices
   cmx<-as.matrix(CM)
   #try to convert a vector to a square matrix
