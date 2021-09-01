@@ -11,7 +11,7 @@ make_rf_diagnostics(
   trees = 999,
   folds = 3,
   reps = 5,
-  tune_length = 1,
+  tune_length = NULL,
   save_rf = NULL
 )
 }

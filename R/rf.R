@@ -23,12 +23,18 @@
                            , trees = 999
                            , folds = 3
                            , reps = 5
-                           , tune_length = 1
+                           , tune_length = NULL
                            , save_rf = NULL
                            ) {
 
     x_df <- df[,env_cols]
     y_vec <- df[clust_col][[1]]
+
+    tune_length <- if(isTRUE(is.null(tune_length))) {
+
+      floor(sqrt(ncol(x_df)))
+
+    } else tune_length
 
     rf <- caret::train(x = x_df
                        , y = y_vec
@@ -45,7 +51,7 @@
 
     if(isTRUE(!is.null(save_rf))) rio::export(rf, save_rf)
 
-    kappa(rf$finalModel$confusion[,-ncol(rf$finalModel$confusion)]
+    make_kappa_tibble(rf$finalModel$confusion[,-ncol(rf$finalModel$confusion)]
           , by_class = FALSE
           )
 
@@ -101,9 +107,12 @@
                            , env_names
                            , trees_start = 499
                            , trees_add = 249
+                           , trees_max = 9999
                            , rf_cores = 1
                            , use_mtry = NULL
                            , out_file = NULL
+                           , accept_prev_delta = 0.995
+                           , accept_prev_kappa = 0.995
                            ) {
 
     if(isTRUE(!is.null(out_file))) {
@@ -175,17 +184,18 @@
                                   , make_kappa_tibble
                                   , by_class = FALSE
                                   )
-                    , delta_prev = 0.5
                     , ntree = map_dbl(rf,"ntree")
                     ) %>%
       tidyr::unnest(cols = c(kappa)) %>%
-      dplyr::mutate(prev_kappa = kappa)
+      dplyr::mutate(prev_kappa = kappa
+                    , prev_delta = kappa
+                    )
 
     while(
       as.logical(
-        (rf_good$rf_res$prev_kappa[[nrow(rf_good$rf_res)]] <= 0.995) *
-        (rf_good$rf_res$delta_prev[[nrow(rf_good$rf_res)]] <= 0.995) *
-        (rf_good$rf_res$trees[[nrow(rf_good$rf_res)]] < 9999)
+        (rf_good$rf_res$prev_kappa[[nrow(rf_good$rf_res)]] <= accept_prev_kappa) *
+        (rf_good$rf_res$prev_delta[[nrow(rf_good$rf_res)]] <= accept_prev_delta) *
+        (rf_good$rf_res$trees[[nrow(rf_good$rf_res)]] < trees_max)
       )
     ) {
 
@@ -210,10 +220,10 @@
 
       kappa <- make_kappa_tibble(conf, by_class = FALSE)
 
-      delta_prev <- sum(prev_rf$predicted == new_rf$predicted)/length(y)
+      prev_delta <- sum(prev_rf$predicted == new_rf$predicted)/length(y)
 
       conf_prev <- caret::confusionMatrix(prev_rf$predicted
-                                           , new_rf$predicted
+                                          , new_rf$predicted
                                            )
 
       kappa_prev <- make_kappa_tibble(conf_prev, by_class = FALSE) %>%
@@ -226,8 +236,9 @@
           , start = start
           , rf = list(new_rf)
           , seconds = rf_run_time
+          , conf = list(conf)
           , kappa
-          , delta_prev = delta_prev
+          , prev_delta = prev_delta
           , kappa_prev
           , ntree = new_rf$ntree
           )
@@ -236,7 +247,7 @@
       cat(
         paste0("ntree: ", rf_good$rf_res$rf[[nrow(rf_good$rf_res)]]$ntree
                , "\n kappa: ",round(rf_good$rf_res$kappa[[nrow(rf_good$rf_res)]],4)
-               , "\n changed predictions: ",paste0(round(100-100*rf_good$rf_res$delta_prev[nrow(rf_good$rf_res)],3),"%")
+               , "\n changed predictions: ",paste0(round(100-100*rf_good$rf_res$prev_delta[nrow(rf_good$rf_res)],3),"%")
                , "\n kappa based on confusion with last run: ", round(rf_good$rf_res$prev_kappa[[nrow(rf_good$rf_res)]],4)
                , "\n time: ",round(rf_good$rf_res$seconds[[nrow(rf_good$rf_res)]],2)," seconds\n\n"
         )

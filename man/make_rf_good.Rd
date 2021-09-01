@@ -11,9 +11,12 @@ make_rf_good(
   env_names,
   trees_start = 499,
   trees_add = 249,
+  trees_max = 9999,
   rf_cores = 1,
   use_mtry = NULL,
-  out_file = NULL
+  out_file = NULL,
+  accept_prev_delta = 0.995,
+  accept_prev_kappa = 0.995
 )
 }
 \arguments{
