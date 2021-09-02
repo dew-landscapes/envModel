@@ -29,4 +29,5 @@ Imports:
     randomForest,
     Rdpack,
     rio,
-    tibble
+    tibble,
+    tidyr

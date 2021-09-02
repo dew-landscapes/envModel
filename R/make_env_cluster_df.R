@@ -12,6 +12,7 @@
 #' floristics such as land cover 'clusters')
 #' @param add_env Dataframe with 'site' and associated env values for
 #' additionalClusters 'sites'.
+#' @param add_clust_col Character name of column in `add_clust` with 'clusters'.
 #' @param set_min Filter clusters those with 'sites' >= minsites
 #' @param env_cols Names of the columns containing the env variables.
 #'
@@ -27,21 +28,37 @@
                                 , min_sites = min_abs_sites
                                 , df_env
                                 , add_clust
+                                , add_clust_col = "cluster"
                                 , add_env
                                 , env_cols
                                 , set_min = FALSE
                                 ) {
 
     df <- df %>%
-      dplyr::bind_rows(add_clust) %>%
       dplyr::select(all_of(context),!!ensym(clust_col)) %>%
       dplyr::inner_join(df_env %>%
-                          dplyr::bind_rows(add_env) %>%
                           na.omit()
-                        ) %>%
+                        )
+
+    if(isTRUE(!is.null(add_clust))) {
+
+      df_add <- add_clust %>%
+        dplyr::select(all_of(context)
+                      , !!ensym(clust_col) := !!ensym(add_clust_col)
+                      ) %>%
+        dplyr::inner_join(add_env %>%
+                            na.omit()
+                          )
+
+      df <- df %>%
+        dplyr::bind_rows(df_add)
+
+
+    }
+
+    df <- df %>%
       dplyr::mutate(!!ensym(clust_col) := factor(!!ensym(clust_col))) %>%
-      dplyr::select(all_of(context),!!ensym(clust_col),all_of(env_cols)) %>%
-      na.omit()
+      dplyr::select(all_of(context),!!ensym(clust_col),all_of(env_cols))
 
     df <- if(set_min) df %>%
       dplyr::add_count(!!ensym(clust_col)) %>%
