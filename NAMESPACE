@@ -3,4 +3,5 @@
 export(make_env_clust_df)
 export(make_kappa_tibble)
 export(make_rf_diagnostics)
+export(make_rf_diagnostics_old)
 export(make_rf_good)

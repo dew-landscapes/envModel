@@ -1,67 +1,4 @@
 
-#' Run random forest, usually returning only diagnostic values.
-#'
-#' Random forest is run via `caret::train`.
-#'
-#' @param df Dataframe with clusters, context and environmental columns.
-#' @param clust_col Character. Name of column with cluster membership.
-#' @param env_cols Character. Name of columns with environmental data.
-#' @param trees Numeric. How many trees in the forest?
-#' @param folds Numeric. How many folds to use in repeated cross-validation.
-#' @param reps Numeric. How many reps to use in `rep`eated cross-validation.
-#' @param tune_length Numeric. Passed to `caret::train` argument `tuneLength`.
-#' @param save_rf Character. File name for saving the `train` object as (.rds).
-#'
-#' @return Tibble (row) of diagnostics
-#'
-#' @export
-#'
-#' @examples
-  make_rf_diagnostics <- function(df
-                           , clust_col = "cluster"
-                           , env_cols
-                           , trees = 999
-                           , folds = 3
-                           , reps = 5
-                           , tune_length = NULL
-                           , save_rf = NULL
-                           ) {
-
-    caret_train_method <- if(folds == 1) "none" else if (reps > 1) "repeatedcv" else "cv"
-
-    reps <- if(caret_train_method != "repeatedcv") NA else reps
-    folds <- if(!grepl("cv",caret_train_method)) NA else folds
-
-    tune_length <- if(is.null(tune_length)) {
-
-      ifelse(caret_train_method == "none", 1, 3)
-
-    } else tune_length
-
-    x_df <- df[,env_cols]
-    y_vec <- df[clust_col][[1]]
-
-    rf <- caret::train(x = x_df
-                       , y = y_vec
-                       , method = "rf"
-                       , ntree = trees
-                       , metric = "Kappa"
-                       , tuneLength = tune_length
-                       , trControl = caret::trainControl(method = caret_train_method
-                                                         , number = folds
-                                                         , repeats = reps
-                                                         , allowParallel = FALSE
-                                                         )
-                       )
-
-    if(isTRUE(!is.null(save_rf))) rio::export(rf, save_rf)
-
-    make_kappa_tibble(rf$finalModel$confusion[,-ncol(rf$finalModel$confusion)]
-          , by_class = FALSE
-          )
-
-  }
-
 
   make_rf_quick <- function(x_df
                              , y_vec
@@ -183,20 +120,18 @@
                                              )
                               )
                     , seconds = Sys.time() - start
-                    , conf = map(rf
-                                 , ~caret::confusionMatrix(.$predicted
-                                                           , y
-                                                           )
-                                 )
-                    , kappa = map(conf
-                                  , make_kappa_tibble
-                                  , by_class = FALSE
-                                  )
-                    , ntree = map_dbl(rf,"ntree")
-                    ) %>%
-      tidyr::unnest(cols = c(kappa)) %>%
-      dplyr::mutate(prev_kappa = kappa
-                    , prev_delta = kappa
+                    , kap = purrr::map(rf
+                                    , ~yardstick::kap(tibble(truth = y
+                                                             , estimate = .$predicted
+                                                             )
+                                                      , truth
+                                                      , estimate
+                                                      )
+                                    )
+                    , kap = purrr::map_dbl(kap, ".estimate")
+                    , ntree = purrr::map_dbl(rf,"ntree")
+                    , prev_kappa = kap
+                    , prev_delta = kap
                     )
 
     while(
@@ -222,20 +157,21 @@
 
       new_rf <- randomForest::combine(prev_rf,next_rf)
 
-      conf <- caret::confusionMatrix(new_rf$predicted
-                                      , y
-                                      )
-
-      kappa <- make_kappa_tibble(conf, by_class = FALSE)
+      kap <- yardstick::kap(tibble(truth = y
+                                   , estimate = new_rf$predicted
+                                   )
+                            , truth
+                            , estimate
+                            )$.estimate
 
       prev_delta <- sum(prev_rf$predicted == new_rf$predicted)/length(y)
 
-      conf_prev <- caret::confusionMatrix(prev_rf$predicted
-                                          , new_rf$predicted
-                                           )
-
-      kappa_prev <- make_kappa_tibble(conf_prev, by_class = FALSE) %>%
-        stats::setNames(paste0("prev_",names(.)))
+      prev_kappa <- yardstick::kap(tibble(truth = prev_rf$predicted
+                                         , estimate = new_rf$predicted
+                                         )
+                                  , truth
+                                  , estimate
+                                  )$.estimate
 
       rf_good$rf_res <- rf_good$rf_res %>%
         dplyr::bind_rows(tibble(
@@ -244,17 +180,16 @@
           , start = start
           , rf = list(new_rf)
           , seconds = rf_run_time
-          , conf = list(conf)
-          , kappa
+          , kap = kap
           , prev_delta = prev_delta
-          , kappa_prev
+          , prev_kappa = prev_kappa
           , ntree = new_rf$ntree
           )
           )
 
       cat(
         paste0("ntree: ", rf_good$rf_res$rf[[nrow(rf_good$rf_res)]]$ntree
-               , "\n kappa: ",round(rf_good$rf_res$kappa[[nrow(rf_good$rf_res)]],4)
+               , "\n kappa: ",round(rf_good$rf_res$kap[[nrow(rf_good$rf_res)]],4)
                , "\n changed predictions: ",paste0(round(100-100*rf_good$rf_res$prev_delta[nrow(rf_good$rf_res)],3),"%")
                , "\n kappa based on confusion with last run: ", round(rf_good$rf_res$prev_kappa[[nrow(rf_good$rf_res)]],4)
                , "\n time: ",round(rf_good$rf_res$seconds[[nrow(rf_good$rf_res)]],2)," seconds\n\n"

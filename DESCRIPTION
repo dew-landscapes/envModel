@@ -26,8 +26,15 @@ Imports:
     dplyr,
     foreach,
     parallel,
+    parsnip,
+    purrr,
     randomForest,
     Rdpack,
+    recipes,
     rio,
+    rsample,
     tibble,
-    tidyr
+    tidyr,
+    tune,
+    workflows,
+    yardstick
