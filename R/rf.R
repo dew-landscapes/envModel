@@ -113,24 +113,22 @@
              , start = Sys.time()
              ) %>%
       dplyr::mutate(rf = list(make_rf_quick(x
-                                             , y
-                                             , trees = trees_start
-                                             , cl_obj = cl
-                                             , use_mtry = rf_good$mtry
-                                             )
+                                            , y
+                                            , trees = trees_start
+                                            , cl_obj = cl
+                                            , use_mtry = rf_good$mtry
+                                            )
                               )
                     , seconds = Sys.time() - start
-                    , kap = purrr::map(rf
-                                    , ~yardstick::kap(tibble(truth = y
-                                                             , estimate = .$predicted
-                                                             )
-                                                      , truth
-                                                      , estimate
-                                                      )
-                                    )
-                    , kap = purrr::map_dbl(kap, ".estimate")
+                    , metrics = purrr::map(rf
+                                           , ~get_conf_metrics(y
+                                                               , .$predicted
+                                                               )
+                                           )
                     , ntree = purrr::map_dbl(rf,"ntree")
-                    , prev_kappa = kap
+                    ) %>%
+      tidyr::unnest(cols = c(metrics)) %>%
+      dplyr::mutate(prev_kappa = kap
                     , prev_delta = kap
                     )
 
@@ -157,12 +155,9 @@
 
       new_rf <- randomForest::combine(prev_rf,next_rf)
 
-      kap <- yardstick::kap(tibble(truth = y
-                                   , estimate = new_rf$predicted
-                                   )
-                            , truth
-                            , estimate
-                            )$.estimate
+      metrics <- get_conf_metrics(y
+                                  , new_rf$predicted
+                                  )
 
       prev_delta <- sum(prev_rf$predicted == new_rf$predicted)/length(y)
 
@@ -174,18 +169,17 @@
                                   )$.estimate
 
       rf_good$rf_res <- rf_good$rf_res %>%
-        dplyr::bind_rows(tibble(
-          run = max(rf_good$rf_res$run) + 1
-          , trees = max(rf_good$rf_res$trees) + next_rf$ntree
-          , start = start
-          , rf = list(new_rf)
-          , seconds = rf_run_time
-          , kap = kap
-          , prev_delta = prev_delta
-          , prev_kappa = prev_kappa
-          , ntree = new_rf$ntree
-          )
-          )
+        dplyr::bind_rows(tibble(run = max(rf_good$rf_res$run) + 1
+                                , trees = max(rf_good$rf_res$trees) + next_rf$ntree
+                                , start = start
+                                , rf = list(new_rf)
+                                , seconds = rf_run_time
+                                , prev_delta = prev_delta
+                                , prev_kappa = prev_kappa
+                                , ntree = new_rf$ntree
+                                ) %>%
+                           dplyr::bind_cols(metrics)
+                         )
 
       cat(
         paste0("ntree: ", rf_good$rf_res$rf[[nrow(rf_good$rf_res)]]$ntree

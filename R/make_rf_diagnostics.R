@@ -25,15 +25,13 @@
                            , ntrees = 999
                            ) {
 
-    cat(paste0("classes: ",length(unique(env_df[clust_col][[1]]))))
-
     df_recipe <- recipes::recipe(as.formula(paste0(clust_col
                                                    , " ~ ."
                                                    )
                                             )
                                  , data = env_df
                                  ) %>%
-      recipes::update_role(any_of(context), new_role = "ID") %>%
+      recipes::update_role(any_of(context), new_role = "context") %>%
       recipes::prep()
 
     df_mod <- parsnip::rand_forest(mode = "classification"
@@ -53,9 +51,17 @@
 
     mets <- yardstick::metric_set(yardstick::accuracy
                                   , yardstick::kap
-                                  , yardstick::roc_auc
                                   , yardstick::sens
                                   , yardstick::spec
+                                  , yardstick::ppv
+                                  , yardstick::npv
+                                  , yardstick::mcc
+                                  , yardstick::j_index
+                                  , yardstick::bal_accuracy
+                                  , yardstick::detection_prevalence
+                                  , yardstick::precision
+                                  , yardstick::recall
+                                  , yardstick::f_meas
                                   )
 
     df_fit_rs <- df_workflow %>%
