@@ -11,7 +11,10 @@ make_rf_diagnostics(
   env_cols,
   folds = 3,
   reps = 2,
-  ntrees = 999
+  use_trees = 499,
+  use_mtry = floor(sqrt(sum(df_recipe$var_info$role == "predictor"))),
+  set_min = FALSE,
+  summarise_folds = folds > 1
 )
 }
 \arguments{
@@ -27,7 +30,14 @@ make_rf_diagnostics(
 
 \item{reps}{Numeric. How many repeats of cross-validation?}
 
-\item{ntrees}{Numeric. How many trees in the random forest?}
+\item{use_trees}{Numeric. How many trees in the random forest?}
+
+\item{use_mtry}{Numeric. \code{mtry} value used by random forest.}
+
+\item{set_min}{FALSE or numeric. If numeric, classes in \code{clust_col} with less
+than \code{set_min} cases will be filtered.}
+
+\item{summarise_folds}{Logical. Return mean values for folds or each fold.}
 }
 \value{
 
