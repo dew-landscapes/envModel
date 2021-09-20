@@ -40,6 +40,7 @@
 #' `.mtry = 1:floor(sqrt(length(env_names))`
 #' @param accept_prev_delta What proportion change between runs is acceptable?
 #' @param accept_prev_kappa What kappa between runs is acceptable?
+#' @param internal_metrics TRUE or test data in same format as `env_df`
 #' @param out_file Optional name of file to save results.
 #'
 #' @return
@@ -55,10 +56,13 @@
                            , trees_max = 9999
                            , rf_cores = 1
                            , use_mtry = NULL
-                           , out_file = NULL
                            , accept_prev_delta = 0.995
                            , accept_prev_kappa = 0.995
+                           , internal_metrics = TRUE
+                           , out_file = NULL
                            ) {
+
+    start <- Sys.time()
 
     if(isTRUE(!is.null(out_file))) {
 
@@ -68,7 +72,7 @@
     }
 
     x <- env_df[,which(names(env_df) %in% env_names)]
-    y <- env_df[clust_col][[1]]
+    y <- env_df[clust_col][[1]] %>% factor()
 
     rf_good <- list()
 
@@ -107,10 +111,29 @@
       } else rf_good$mtry <- use_mtry
 
 
+    get_truth_pred <- function(internal_metrics, rf){
+
+      if(isTRUE(internal_metrics)) {
+
+        truth <- y
+        pred <- rf$predicted
+
+
+      } else {
+
+        truth <- internal_metrics[clust_col][[1]]
+        pred <- predict(rf, newdata = internal_metrics)
+
+      }
+
+      tibble(truth,pred)
+
+    }
+
+
     rf_good$rf_res <-
       tibble(run = 1
              , trees = trees_start
-             , start = Sys.time()
              ) %>%
       dplyr::mutate(rf = list(make_rf_quick(x
                                             , y
@@ -119,10 +142,10 @@
                                             , use_mtry = rf_good$mtry
                                             )
                               )
-                    , seconds = Sys.time() - start
                     , metrics = purrr::map(rf
-                                           , ~get_conf_metrics(y
-                                                               , .$predicted
+                                           , ~get_conf_metrics(get_truth_pred(internal_metrics
+                                                                              , .
+                                                                              )
                                                                )
                                            )
                     , ntree = purrr::map_dbl(rf,"ntree")
@@ -142,8 +165,6 @@
 
       prev_rf <- rf_good$rf_res$rf[nrow(rf_good$rf_res)][[1]]
 
-      start <- Sys.time()
-
       next_rf <- make_rf_quick(x
                                 , y
                                 , trees = trees_add
@@ -151,13 +172,12 @@
                                 , use_mtry = rf_good$mtry
                                 )
 
-      rf_run_time <- Sys.time() - start
-
       new_rf <- randomForest::combine(prev_rf,next_rf)
 
-      metrics <- get_conf_metrics(y
-                                  , new_rf$predicted
-                                  )
+      metrics <- get_conf_metrics(get_truth_pred(internal_metrics
+                                                  , new_rf
+                                                  )
+                                   )
 
       prev_delta <- sum(prev_rf$predicted == new_rf$predicted)/length(y)
 
@@ -171,9 +191,7 @@
       rf_good$rf_res <- rf_good$rf_res %>%
         dplyr::bind_rows(tibble(run = max(rf_good$rf_res$run) + 1
                                 , trees = max(rf_good$rf_res$trees) + next_rf$ntree
-                                , start = start
                                 , rf = list(new_rf)
-                                , seconds = rf_run_time
                                 , prev_delta = prev_delta
                                 , prev_kappa = prev_kappa
                                 , ntree = new_rf$ntree
@@ -186,14 +204,18 @@
                , "\n kappa: ",round(rf_good$rf_res$kap[[nrow(rf_good$rf_res)]],4)
                , "\n changed predictions: ",paste0(round(100-100*rf_good$rf_res$prev_delta[nrow(rf_good$rf_res)],3),"%")
                , "\n kappa based on confusion with last run: ", round(rf_good$rf_res$prev_kappa[[nrow(rf_good$rf_res)]],4)
-               , "\n time: ",round(rf_good$rf_res$seconds[[nrow(rf_good$rf_res)]],2)," seconds\n\n"
-        )
+               , "\n elapsed time: ", as.numeric(round(difftime(Sys.time(), start, units = "secs"),2)), " seconds\n\n"
+               )
       )
 
     }
 
     parallel::stopCluster(cl)
     rm(cl)
+
+    rf_good$metrics <- if(isTRUE(internal_metrics)) "internal" else "test data"
+
+    rf_good$seconds <- round(as.numeric(difftime(Sys.time(), start, units = "secs")),2)
 
     if(!isTRUE(is.null(out_file))) rio::export(rf_good,out_file)
 

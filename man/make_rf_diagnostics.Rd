@@ -8,13 +8,15 @@ make_rf_diagnostics(
   env_df,
   clust_col = "cluster",
   context = "cell",
-  env_cols,
+  env_names,
   folds = 3,
-  reps = 2,
-  use_trees = 499,
-  use_mtry = floor(sqrt(sum(df_recipe$var_info$role == "predictor"))),
+  reps = 5,
+  use_mtry = floor(sqrt(length(env_names))),
   set_min = FALSE,
-  summarise_folds = folds > 1
+  summarise_folds = TRUE,
+  trees_start = 499,
+  trees_add = 499,
+  trees_max = 9999
 )
 }
 \arguments{
@@ -24,13 +26,11 @@ make_rf_diagnostics(
 
 \item{context}{Character. Name of column(s) defining the context.}
 
-\item{env_cols}{Character. Name of columns with environmental data.}
+\item{env_names}{Character. Name of columns with environmental data.}
 
 \item{folds}{Numeric. How many folds to use in cross-validation?}
 
 \item{reps}{Numeric. How many repeats of cross-validation?}
-
-\item{use_trees}{Numeric. How many trees in the random forest?}
 
 \item{use_mtry}{Numeric. \code{mtry} value used by random forest.}
 
@@ -38,6 +38,8 @@ make_rf_diagnostics(
 than \code{set_min} cases will be filtered.}
 
 \item{summarise_folds}{Logical. Return mean values for folds or each fold.}
+
+\item{trees_start, trees_add, trees_max}{passed to \verb{\link[envModel]\{make_rf_good\}}}
 }
 \value{
 

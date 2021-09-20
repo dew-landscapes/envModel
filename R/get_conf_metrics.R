@@ -2,57 +2,41 @@
 
 #' Calculate diagnostics
 #'
-#' Takes a data frame of truth and predicted cases. Returns overall or per
-#' class results.
+#' Takes vectors of truth and predicted cases and returns a range of `yardstick`
+#' metrics.
 #'
-#' @param df_pred Data frame containing truth and predicted classes.
-#' @param by_class Logical. Return a row per class, or mean values across all
-#' classes.
+#' @param pred_df Dataframe of truth and predicted classes for each case.
+#' @param truth_vec Vector of true classes.
+#' @param pred_vec Vector of predicted classes.
 #'
-#' @return Tibble
+#' @return Tibble of metrics.
 #' @export
 #'
 #' @examples
-make_model_diagnostics <- function(df_pred, by_class) {
+get_conf_metrics <- function(pred_df
+                             , truth_vec = NULL
+                             , pred_vec = NULL
+                             ) {
 
+  tib <- if(isTRUE(is.null(pred_df))) {
 
+    tibble::tibble(truth = truth_vec
+                   , pred = pred_vec
+                   )
 
-  #return all statistics
-  if(by_class) {
+  } else pred_df
 
-    tibble::tibble(cluster = names(ua)
-                   , sum_n = n
-                   , sum_naive = th1
-                   , sum_var = th1v
-                   , sum_kappa = kh
-                   , sum_kvar = khv
-                   , user_naive = ua
-                   , prod_naive = pa
-                   , user_kappa = kpu
-                   , user_kvar = kpuv
-                   , prod_kappa = kpp
-                   , prod_kvar = kppv
-                   ) %>%
-      dplyr::mutate(across(where(is.numeric),unname))
+  tib_fac <- tib %>%
+    dplyr::mutate(pred = factor(pred, levels = levels(.$truth)))
 
-  } else {
-
-    tibble::tibble(sum_n = n
-                   , accuracy = th1
-                   , accuracy_var = th1v
-                   , kappa = kh
-                   , kappa_var = khv
-                   , user_naive = ua
-                   , prod_naive = pa
-                   , user_kappa = kpu
-                   , user_kvar = kpuv
-                   , prod_kappa = kpp
-                   , prod_kvar = kppv
-                   ) %>%
-      dplyr::summarise(across(where(is.numeric),mean,na.rm = TRUE))
-
-
-  }
-
+  mets <- yardstick::conf_mat(tib_fac
+                              , truth
+                              , pred
+                              ) %>%
+    summary() %>%
+    dplyr::select(.metric,.estimate) %>%
+    tidyr::pivot_wider(names_from = ".metric"
+                       , values_from = ".estimate"
+                       )
 
 }

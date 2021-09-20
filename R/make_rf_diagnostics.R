@@ -7,14 +7,14 @@
 #' @param env_df Dataframe with clusters, context and environmental columns.
 #' @param clust_col Character. Name of column with cluster membership.
 #' @param context Character. Name of column(s) defining the context.
-#' @param env_cols Character. Name of columns with environmental data.
+#' @param env_names Character. Name of columns with environmental data.
 #' @param folds Numeric. How many folds to use in cross-validation?
 #' @param reps Numeric. How many repeats of cross-validation?
-#' @param use_trees Numeric. How many trees in the random forest?
 #' @param use_mtry Numeric. `mtry` value used by random forest.
 #' @param set_min FALSE or numeric. If numeric, classes in `clust_col` with less
 #' than `set_min` cases will be filtered.
 #' @param summarise_folds Logical. Return mean values for folds or each fold.
+#' @param trees_start,trees_add,trees_max passed to `\link[envModel]{make_rf_good}`
 #'
 #' @return
 #' @export
@@ -23,14 +23,23 @@
   make_rf_diagnostics <- function(env_df
                            , clust_col = "cluster"
                            , context = "cell"
-                           , env_cols
+                           , env_names
                            , folds = 3
-                           , reps = 2
-                           , use_trees = 499
-                           , use_mtry = floor(sqrt(sum(df_recipe$var_info$role == "predictor")))
+                           , reps = 5
+                           , use_mtry = floor(sqrt(length(env_names)))
                            , set_min = FALSE
-                           , summarise_folds = folds > 1
+                           , summarise_folds = TRUE
+                           , trees_start = 499
+                           , trees_add = 499
+                           , trees_max = 9999
                            ) {
+
+    .context = context
+    .env_names = env_names
+    .trees_start = trees_start
+    .trees_add = trees_add
+    .trees_max = trees_max
+    .use_mtry = use_mtry
 
     env_df_use <- if(!isFALSE(set_min)) {
 
@@ -43,68 +52,64 @@
     } else env_df
 
 
-    df_recipe <- recipes::recipe(as.formula(paste0(clust_col
-                                                   , " ~ ."
-                                                   )
-                                            )
-                                 , data = env_df_use
-                                 ) %>%
-      recipes::update_role(any_of(context), new_role = "context")
+    split <- rsample::vfold_cv(env_df_use
+                               , v = folds
+                               , repeats = reps
+                               , strata = !!ensym(clust_col)
+                               )
 
 
-    df_mod <- parsnip::rand_forest(mode = "classification"
-                                   , trees = use_trees
-                                   , mtry = use_mtry
-                                   ) %>%
-      parsnip::set_engine("randomForest")
+    rf_res <- split %>%
+      dplyr::mutate(rf = map(splits
+                             , ~make_rf_good(rsample::analysis(.)
+                                             , context = .context
+                                             , env_names = .env_names
+                                             , use_mtry = .use_mtry
+                                             , internal_metrics = rsample::assessment(.)
+                                             , trees_start = .trees_start
+                                             , trees_add = .trees_add
+                                             , trees_max = .trees_max
+                                             )
+                             )
+                    ) %>%
+      dplyr::mutate(metrics = map_chr(rf,"metrics")
+                    , mtry = map_dbl(rf,"mtry")
+                    , seconds = map_dbl(rf, "seconds")
+                    , rf_res = map(rf, "rf_res")
+                    , rf_res = map(rf_res
+                                   , . %>%
+                                     dplyr::slice(nrow(.))
+                                   )
+                    ) %>%
+      dplyr::select(-rf) %>%
+      tidyr::unnest(cols = c(rf_res)) %>%
+      dplyr::select(negate(where(is.list)))
 
+    rf_res <- if("id2" %in% names(rf_res)) {
 
-    df_workflow <- workflows::workflow() %>%
-      workflows::add_model(df_mod) %>%
-      workflows::add_recipe(df_recipe)
+        rf_res %>%
+          dplyr::rename(folds = id2, reps = id)
 
-    df_cv <- env_df_use %>%
-      rsample::vfold_cv(v = folds
-                        , repeats = reps
-                        , strata = !!ensym(clust_col)
-                        )
+      } else {
 
-    mets <- yardstick::metric_set(yardstick::accuracy
-                                  , yardstick::kap
-                                  , yardstick::sens
-                                  , yardstick::spec
-                                  , yardstick::ppv
-                                  , yardstick::npv
-                                  , yardstick::mcc
-                                  , yardstick::j_index
-                                  , yardstick::bal_accuracy
-                                  , yardstick::detection_prevalence
-                                  , yardstick::precision
-                                  , yardstick::recall
-                                  , yardstick::f_meas
-                                  )
+        rf_res %>%
+          dplyr::rename(folds = id)
 
-    df_fit_rs <- df_workflow %>%
-      tune::fit_resamples(df_cv
-                          , metrics = mets
-                          )
-
-    df_res <- tune::collect_metrics(df_fit_rs
-                                    , summarize = FALSE
-                                    )
+      }
 
     if(summarise_folds) {
 
-      fold_col <- names(which.max(lapply(df_res, function(x) sum(grepl("fold|Fold",x)))))
-
-      df_res <- df_res %>%
-        dplyr::group_by(across(-c(!!ensym(fold_col),.estimate))) %>%
-        dplyr::summarise(.estimate = mean(.estimate)) %>%
+      rf_res <- rf_res %>%
+        dplyr::group_by(across(contains("reps"))
+                        , metrics
+                        , mtry
+                        ) %>%
+        dplyr::summarise(across(where(is.numeric), mean, na.rm = TRUE)) %>%
         dplyr::ungroup()
 
     }
 
-    return(df_res)
+    return(rf_res)
 
   }
 
