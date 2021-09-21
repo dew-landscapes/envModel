@@ -131,10 +131,7 @@
     }
 
 
-    rf_good$rf_res <-
-      tibble(run = 1
-             , trees = trees_start
-             ) %>%
+    rf_good$rf_res <- tibble(trees = trees_start) %>%
       dplyr::mutate(rf = list(make_rf_quick(x
                                             , y
                                             , trees = trees_start
@@ -159,7 +156,7 @@
       as.logical(
         (rf_good$rf_res$prev_kappa[[nrow(rf_good$rf_res)]] <= accept_prev_kappa) *
         (rf_good$rf_res$prev_delta[[nrow(rf_good$rf_res)]] <= accept_prev_delta) *
-        (rf_good$rf_res$trees[[nrow(rf_good$rf_res)]] < trees_max)
+        (rf_good$rf_res$ntree[[nrow(rf_good$rf_res)]] < trees_max)
       )
     ) {
 
@@ -188,16 +185,12 @@
                                   , estimate
                                   )$.estimate
 
-      rf_good$rf_res <- rf_good$rf_res %>%
-        dplyr::bind_rows(tibble(run = max(rf_good$rf_res$run) + 1
-                                , trees = max(rf_good$rf_res$trees) + next_rf$ntree
-                                , rf = list(new_rf)
+      rf_good$rf_res <- tibble(rf = list(new_rf)
                                 , prev_delta = prev_delta
                                 , prev_kappa = prev_kappa
                                 , ntree = new_rf$ntree
                                 ) %>%
                            dplyr::bind_cols(metrics)
-                         )
 
       cat(
         paste0("ntree: ", rf_good$rf_res$rf[[nrow(rf_good$rf_res)]]$ntree

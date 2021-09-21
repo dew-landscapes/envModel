@@ -76,10 +76,10 @@
                     , mtry = map_dbl(rf,"mtry")
                     , seconds = map_dbl(rf, "seconds")
                     , rf_res = map(rf, "rf_res")
-                    , rf_res = map(rf_res
-                                   , . %>%
-                                     dplyr::slice(nrow(.))
-                                   )
+                    # , rf_res = map(rf_res
+                    #                , . %>%
+                    #                  dplyr::slice(nrow(.))
+                    #                )
                     ) %>%
       dplyr::select(-rf) %>%
       tidyr::unnest(cols = c(rf_res)) %>%
