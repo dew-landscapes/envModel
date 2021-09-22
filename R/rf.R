@@ -154,7 +154,7 @@
 
     while(
       as.logical(
-        (rf_good$rf_res$prev_kappa[[nrow(rf_good$rf_res)]] <= accept_prev_kappa) *
+        #(rf_good$rf_res$prev_kappa[[nrow(rf_good$rf_res)]] <= accept_prev_kappa) *
         (rf_good$rf_res$prev_delta[[nrow(rf_good$rf_res)]] <= accept_prev_delta) *
         (rf_good$rf_res$ntree[[nrow(rf_good$rf_res)]] < trees_max)
       )
