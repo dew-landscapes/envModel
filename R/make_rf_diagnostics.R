@@ -32,6 +32,7 @@
                            , trees_start = 499
                            , trees_add = 499
                            , trees_max = 9999
+                           , accept_delta = formals(make_rf_good)$accept_prev_delta
                            ) {
 
     .context = context
@@ -40,6 +41,7 @@
     .trees_add = trees_add
     .trees_max = trees_max
     .use_mtry = use_mtry
+    .accept_delta = accept_delta
 
     env_df_use <- if(!isFALSE(set_min)) {
 
@@ -69,6 +71,7 @@
                                              , trees_start = .trees_start
                                              , trees_add = .trees_add
                                              , trees_max = .trees_max
+                                             , accept_delta = .accept_delta
                                              )
                              )
                     ) %>%
