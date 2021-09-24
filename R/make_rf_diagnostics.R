@@ -15,6 +15,8 @@
 #' than `set_min` cases will be filtered.
 #' @param summarise_folds Logical. Return mean values for folds or each fold.
 #' @param trees_start,trees_add,trees_max passed to `\link[envModel]{make_rf_good}`
+#' @param accept_delta Proportion. What change in predictions (as trees are
+#' added to the forest) is acceptable?
 #'
 #' @return
 #' @export

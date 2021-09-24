@@ -1,26 +1,40 @@
 
 
   make_rf_quick <- function(x_df
-                             , y_vec
-                             , trees = 499
-                             , cl_obj = NULL
-                             , use_mtry
-                             ) {
+                            , y_vec
+                            , trees = 499
+                            , cl_obj = NULL
+                            , use_mtry
+                            , do_imp = FALSE
+                            ) {
 
-    rf_cores <- if(isTRUE(is.null(cl_obj))) 1 else length(cl_obj)
+    if(isTRUE(!is.null(cl_obj))) {
 
-    `%dopar%` <- foreach::`%dopar%`
+      rf_cores <- length(cl_obj)
 
-    foreach::foreach(ntree = rep(ceiling(trees/rf_cores), rf_cores)
-            , .combine = randomForest::combine
-            , .packages = c("randomForest")
-            ) %dopar%
+      `%dopar%` <- foreach::`%dopar%`
+
+      foreach::foreach(ntree = rep(ceiling(trees/rf_cores), rf_cores)
+              , .combine = randomForest::combine
+              , .packages = c("randomForest")
+              ) %dopar%
+        randomForest::randomForest(x = x_df
+                                   , y = y_vec
+                                   , importance = do_imp
+                                   , mtry = use_mtry
+                                   , ntree = ntree
+                                   )
+
+    } else {
+
       randomForest::randomForest(x = x_df
                                  , y = y_vec
-                                 , importance = TRUE
+                                 , importance = do_imp
                                  , mtry = use_mtry
-                                 , ntree = ntree
+                                 , ntree = trees
                                  )
+
+    }
 
   }
 
@@ -40,6 +54,7 @@
 #' `.mtry = 1:floor(sqrt(length(env_names))`
 #' @param accept_delta What proportion change between runs is acceptable?
 #' @param internal_metrics TRUE or test data in same format as `env_df`
+#' @param do_imp Logical. Passed to `importance` argument of `randomForest`.
 #' @param out_file Optional name of file to save results.
 #'
 #' @return
@@ -57,10 +72,13 @@
                            , use_mtry = NULL
                            , accept_delta = 0.995
                            , internal_metrics = TRUE
+                           , do_imp = FALSE
                            , out_file = NULL
                            ) {
 
-    start <- Sys.time()
+    .do_imp = do_imp
+
+    go_time <- Sys.time()
 
     if(isTRUE(!is.null(out_file))) {
 
@@ -75,8 +93,12 @@
     rf_good <- list()
 
     # setup parallel cluster
-    cl <- parallel::makePSOCKcluster(rf_cores)
-    doParallel::registerDoParallel(cl)
+    if(rf_cores > 1) {
+
+      cl <- parallel::makePSOCKcluster(rf_cores)
+      doParallel::registerDoParallel(cl)
+
+    }
 
     if(isTRUE(is.null(use_mtry))) {
 
@@ -84,14 +106,11 @@
       ctrl <- caret::trainControl(method = "cv"
                                   , savePredictions = FALSE
                                   , verboseIter = FALSE
-                                  , allowParallel = TRUE
+                                  , allowParallel = rf_cores > 1
                                   )
 
       # Tuning grid
       c_tune_grid <- expand.grid(.mtry = 1:floor(sqrt(length(env_names))))
-
-      cl <- parallel::makePSOCKcluster(rf_cores)
-      doParallel::registerDoParallel(cl)
 
       rf_good$rf_mtry <- caret::train(x
                                       , y
@@ -133,8 +152,9 @@
       dplyr::mutate(rf = list(make_rf_quick(x
                                             , y
                                             , trees = trees_start
-                                            , cl_obj = cl
+                                            , if(rf_cores > 1) cl_obj = cl
                                             , use_mtry = rf_good$mtry
+                                            , do_imp = .do_imp
                                             )
                               )
                     , metrics = purrr::map(rf
@@ -160,11 +180,11 @@
       prev_rf <- rf_good$rf_res$rf[nrow(rf_good$rf_res)][[1]]
 
       next_rf <- make_rf_quick(x
-                                , y
-                                , trees = trees_add
-                                , cl_obj = cl
-                                , use_mtry = rf_good$mtry
-                                )
+                               , y
+                               , trees = trees_add
+                               , if(rf_cores > 1) cl_obj = cl
+                               , use_mtry = rf_good$mtry
+                               )
 
       new_rf <- randomForest::combine(prev_rf,next_rf)
 
@@ -194,18 +214,23 @@
                , "\n kappa: ",round(rf_good$rf_res$kap[[nrow(rf_good$rf_res)]],4)
                , "\n changed predictions: ",paste0(round(100-100*rf_good$rf_res$prev_delta[nrow(rf_good$rf_res)],3),"%")
                , "\n kappa based on confusion with last run: ", round(rf_good$rf_res$prev_kappa[[nrow(rf_good$rf_res)]],4)
-               , "\n elapsed time: ", as.numeric(round(difftime(Sys.time(), start, units = "secs"),2)), " seconds\n\n"
+               , "\n elapsed time: ", as.numeric(round(difftime(Sys.time(), go_time, units = "secs"),2)), " seconds\n\n"
                )
       )
 
     }
 
-    parallel::stopCluster(cl)
-    rm(cl)
+    # stop parallel cluster
+    if(rf_cores > 1) {
+
+      parallel::stopCluster(cl)
+      rm(cl)
+
+    }
 
     rf_good$metrics <- if(isTRUE(internal_metrics)) "internal" else "test data"
 
-    rf_good$seconds <- round(as.numeric(difftime(Sys.time(), start, units = "secs")),2)
+    rf_good$seconds <- round(as.numeric(difftime(Sys.time(), go_time, units = "secs")),2)
 
     if(!isTRUE(is.null(out_file))) rio::export(rf_good,out_file)
 
