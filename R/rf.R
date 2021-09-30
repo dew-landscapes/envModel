@@ -128,9 +128,9 @@
       } else rf_good$mtry <- use_mtry
 
 
-    get_truth_pred <- function(internal_metrics, rf){
+    get_truth_pred <- function(int_met, rf){
 
-      if(isTRUE(internal_metrics)) {
+      if(isTRUE(int_met)) {
 
         truth <- y
         pred <- rf$predicted
@@ -138,8 +138,11 @@
 
       } else {
 
-        truth <- internal_metrics[clust_col][[1]]
-        pred <- predict(rf, newdata = internal_metrics)
+        new_data <- int_met[ , colSums(is.na(int_met)) == 0]
+
+        truth <- new_data[clust_col][[1]]
+
+        pred <- predict(rf, newdata = new_data)
 
       }
 

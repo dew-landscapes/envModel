@@ -27,7 +27,7 @@
                                 , context = "cell"
                                 , min_sites = min_abs_sites
                                 , df_env
-                                , add_clust
+                                , add_clust = NULL
                                 , add_clust_col = "cluster"
                                 , add_env
                                 , env_cols
@@ -35,7 +35,7 @@
                                 ) {
 
     df <- df %>%
-      dplyr::select(all_of(context),!!ensym(clust_col)) %>%
+      dplyr::select(any_of(context),!!ensym(clust_col)) %>%
       dplyr::inner_join(df_env %>%
                           na.omit()
                         )
@@ -43,7 +43,7 @@
     if(isTRUE(!is.null(add_clust))) {
 
       df_add <- add_clust %>%
-        dplyr::select(all_of(context)
+        dplyr::select(any_of(context)
                       , !!ensym(clust_col) := !!ensym(add_clust_col)
                       ) %>%
         dplyr::inner_join(add_env %>%
@@ -58,7 +58,7 @@
 
     df <- df %>%
       dplyr::mutate(!!ensym(clust_col) := factor(!!ensym(clust_col))) %>%
-      dplyr::select(all_of(context),!!ensym(clust_col),all_of(env_cols))
+      dplyr::select(any_of(context),!!ensym(clust_col),all_of(env_cols))
 
     df <- if(set_min) df %>%
       dplyr::add_count(!!ensym(clust_col)) %>%

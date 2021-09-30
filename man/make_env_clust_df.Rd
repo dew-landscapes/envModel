@@ -10,7 +10,7 @@ make_env_clust_df(
   context = "cell",
   min_sites = min_abs_sites,
   df_env,
-  add_clust,
+  add_clust = NULL,
   add_clust_col = "cluster",
   add_env,
   env_cols,
