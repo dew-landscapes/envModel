@@ -173,9 +173,11 @@
                     , prev_delta = kap
                     )
 
+    counter <- 0
+
     while(
       as.logical(
-        (rf_good$rf_res$prev_delta[[nrow(rf_good$rf_res)]] <= accept_delta) *
+        (counter < 3) *
         (rf_good$rf_res$ntree[[nrow(rf_good$rf_res)]] < trees_max)
       )
     ) {
@@ -213,8 +215,16 @@
                                 ) %>%
                            dplyr::bind_cols(metrics)
 
+      counter <- if(prev_delta <= accept_delta) {
+
+        counter + 1
+
+        } else 0
+
+
       cat(
         paste0("ntree: ", rf_good$rf_res$rf[[nrow(rf_good$rf_res)]]$ntree
+              , "\n counter on:", counter, ". Stop at 3"
                , "\n kappa: ",round(rf_good$rf_res$kap[[nrow(rf_good$rf_res)]],4)
                , "\n changed predictions: ",paste0(round(100-100*rf_good$rf_res$prev_delta[nrow(rf_good$rf_res)],3),"%")
                , "\n kappa based on confusion with last run: ", round(rf_good$rf_res$prev_kappa[[nrow(rf_good$rf_res)]],4)
