@@ -17,6 +17,7 @@
 #' @param trees_start,trees_add,trees_max passed to `\link[envModel]{make_rf_good}`
 #' @param accept_delta Proportion. What change in predictions (as trees are
 #' added to the forest) is acceptable?
+#' @param accept_run How many forests (in a row) need to beat `accept_delta`?
 #'
 #' @return
 #' @export
@@ -35,6 +36,7 @@
                            , trees_add = 499
                            , trees_max = 9999
                            , accept_delta = formals(make_rf_good)$accept_prev_delta
+                           , accept_run = 3
                            ) {
 
     .context = context
@@ -44,6 +46,7 @@
     .trees_max = trees_max
     .use_mtry = use_mtry
     .accept_delta = accept_delta
+    .accept_run = accept_run
 
     env_df_use <- if(!isFALSE(set_min)) {
 
@@ -74,6 +77,7 @@
                                              , trees_add = .trees_add
                                              , trees_max = .trees_max
                                              , accept_delta = .accept_delta
+                                             , accept_run = .accept_run
                                              )
                              )
                     ) %>%

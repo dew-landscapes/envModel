@@ -54,6 +54,7 @@
 #' `.mtry = 1:floor(sqrt(length(env_names))`
 #' @param set_min FALSE or numeric. If numeric, classes in `clust_col` with less
 #' @param accept_delta What proportion change between runs is acceptable?
+#' @param accept_run How many forests (in a row) need to beat `accept_delta`?
 #' @param internal_metrics TRUE or test data in same format as `env_df`
 #' @param do_imp Logical. Passed to `importance` argument of `randomForest`.
 #' @param out_file Optional name of file to save results.
@@ -73,6 +74,7 @@
                            , use_mtry = NULL
                            , set_min = FALSE
                            , accept_delta = 0.995
+                           , accept_run = 3
                            , internal_metrics = TRUE
                            , do_imp = FALSE
                            , out_file = NULL
@@ -189,7 +191,7 @@
 
     while(
       as.logical(
-        (counter < 3) *
+        (counter < accept_run) *
         (rf_good$rf_res$ntree[[nrow(rf_good$rf_res)]] < trees_max)
       )
     ) {
@@ -236,7 +238,7 @@
 
       cat(
         paste0("ntree: ", rf_good$rf_res$rf[[nrow(rf_good$rf_res)]]$ntree
-              , "\n counter on: ", counter, ". Stop at 3"
+              , "\n counter on: ", counter, " (Stop at ",accept_run,")"
                , "\n kappa: ",round(rf_good$rf_res$kap[[nrow(rf_good$rf_res)]],4)
                , "\n changed predictions: ",paste0(round(100-100*rf_good$rf_res$prev_delta[nrow(rf_good$rf_res)],3),"%")
                , "\n kappa based on confusion with last run: ", round(rf_good$rf_res$prev_kappa[[nrow(rf_good$rf_res)]],4)

@@ -17,7 +17,8 @@ make_rf_diagnostics(
   trees_start = 499,
   trees_add = 499,
   trees_max = 9999,
-  accept_delta = formals(make_rf_good)$accept_prev_delta
+  accept_delta = formals(make_rf_good)$accept_prev_delta,
+  accept_run = 3
 )
 }
 \arguments{

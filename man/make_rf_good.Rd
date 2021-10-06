@@ -16,6 +16,7 @@ make_rf_good(
   use_mtry = NULL,
   set_min = FALSE,
   accept_delta = 0.995,
+  accept_run = 3,
   internal_metrics = TRUE,
   do_imp = FALSE,
   out_file = NULL
