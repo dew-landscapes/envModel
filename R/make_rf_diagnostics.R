@@ -39,6 +39,7 @@
                            , accept_run = 3
                            ) {
 
+    .clust_col = clust_col
     .context = context
     .env_names = env_names
     .trees_start = trees_start
@@ -69,6 +70,7 @@
     rf_res <- split %>%
       dplyr::mutate(rf = map(splits
                              , ~make_rf_good(rsample::analysis(.)
+                                             , clust_col = .clust_col
                                              , context = .context
                                              , env_names = .env_names
                                              , use_mtry = .use_mtry

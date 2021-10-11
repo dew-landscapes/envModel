@@ -45,6 +45,8 @@ than \code{set_min} cases will be filtered.}
 
 \item{accept_delta}{Proportion. What change in predictions (as trees are
 added to the forest) is acceptable?}
+
+\item{accept_run}{How many forests (in a row) need to beat \code{accept_delta}?}
 }
 \value{
 
