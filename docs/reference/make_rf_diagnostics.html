@@ -120,11 +120,8 @@
     <pre class="usage"><span class='fu'>make_rf_diagnostics</span><span class='op'>(</span>
   <span class='va'>env_df</span>,
   clust_col <span class='op'>=</span> <span class='st'>"cluster"</span>,
-  context <span class='op'>=</span> <span class='st'>"cell"</span>,
-  <span class='va'>env_names</span>,
   folds <span class='op'>=</span> <span class='fl'>3</span>,
   reps <span class='op'>=</span> <span class='fl'>5</span>,
-  use_mtry <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/Round.html'>floor</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/MathFun.html'>sqrt</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/length.html'>length</a></span><span class='op'>(</span><span class='va'>env_names</span><span class='op'>)</span><span class='op'>)</span><span class='op'>)</span>,
   set_min <span class='op'>=</span> <span class='cn'>FALSE</span>,
   summarise_folds <span class='op'>=</span> <span class='cn'>TRUE</span>,
   <span class='va'>...</span>
@@ -142,24 +139,12 @@
       <td><p>Character. Name of column with cluster membership.</p></td>
     </tr>
     <tr>
-      <th>context</th>
-      <td><p>Character. Name of column(s) defining the context.</p></td>
-    </tr>
-    <tr>
-      <th>env_names</th>
-      <td><p>Character. Name of columns with environmental data.</p></td>
-    </tr>
-    <tr>
       <th>folds</th>
       <td><p>Numeric. How many folds to use in cross-validation?</p></td>
     </tr>
     <tr>
       <th>reps</th>
       <td><p>Numeric. How many repeats of cross-validation?</p></td>
-    </tr>
-    <tr>
-      <th>use_mtry</th>
-      <td><p>Numeric. <code>mtry</code> value used by random forest.</p></td>
     </tr>
     <tr>
       <th>set_min</th>
@@ -172,7 +157,7 @@ than <code>set_min</code> cases will be filtered.</p></td>
     </tr>
     <tr>
       <th>...</th>
-      <td><p>passed to <code>\link[envModel]{make_rf_good}</code></p></td>
+      <td><p>passed to <code><a href='make_rf_good.html'>make_rf_good()</a></code>.</p></td>
     </tr>
     </table>
 

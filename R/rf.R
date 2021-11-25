@@ -55,7 +55,7 @@
 #' @param set_min FALSE or numeric. If numeric, classes in `clust_col` with less
 #' @param accept_delta What proportion change between runs is acceptable?
 #' @param accept_run How many forests (in a row) need to beat `accept_delta`?
-#' @param internal_metrics TRUE or test data in same format as `env_df`
+#' @param internal_metrics TRUE or test data in same format as `env_df`.
 #' @param do_imp Logical. Passed to `importance` argument of
 #' [randomForest::randomForest()].
 #' @param out_file Optional name of file to save results.

@@ -50,7 +50,7 @@ with a tune grid of \verb{.mtry = 1:floor(sqrt(length(env_names))}.}
 
 \item{accept_run}{How many forests (in a row) need to beat \code{accept_delta}?}
 
-\item{internal_metrics}{TRUE or test data in same format as \code{env_df}}
+\item{internal_metrics}{TRUE or test data in same format as \code{env_df}.}
 
 \item{do_imp}{Logical. Passed to \code{importance} argument of
 \code{\link[randomForest:randomForest]{randomForest::randomForest()}}.}

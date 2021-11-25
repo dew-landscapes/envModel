@@ -7,11 +7,8 @@
 make_rf_diagnostics(
   env_df,
   clust_col = "cluster",
-  context = "cell",
-  env_names,
   folds = 3,
   reps = 5,
-  use_mtry = floor(sqrt(length(env_names))),
   set_min = FALSE,
   summarise_folds = TRUE,
   ...
@@ -22,22 +19,16 @@ make_rf_diagnostics(
 
 \item{clust_col}{Character. Name of column with cluster membership.}
 
-\item{context}{Character. Name of column(s) defining the context.}
-
-\item{env_names}{Character. Name of columns with environmental data.}
-
 \item{folds}{Numeric. How many folds to use in cross-validation?}
 
 \item{reps}{Numeric. How many repeats of cross-validation?}
-
-\item{use_mtry}{Numeric. \code{mtry} value used by random forest.}
 
 \item{set_min}{FALSE or numeric. If numeric, classes in \code{clust_col} with less
 than \code{set_min} cases will be filtered.}
 
 \item{summarise_folds}{Logical. Return mean values for folds or each fold.}
 
-\item{...}{passed to \verb{\link[envModel]\{make_rf_good\}}}
+\item{...}{passed to \code{\link[=make_rf_good]{make_rf_good()}}.}
 }
 \value{
 
