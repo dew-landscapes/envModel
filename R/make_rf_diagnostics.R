@@ -14,10 +14,7 @@
 #' @param set_min FALSE or numeric. If numeric, classes in `clust_col` with less
 #' than `set_min` cases will be filtered.
 #' @param summarise_folds Logical. Return mean values for folds or each fold.
-#' @param trees_start,trees_add,trees_max passed to `\link[envModel]{make_rf_good}`
-#' @param accept_delta Proportion. What change in predictions (as trees are
-#' added to the forest) is acceptable?
-#' @param accept_run How many forests (in a row) need to beat `accept_delta`?
+#' @param ... passed to `\link[envModel]{make_rf_good}`
 #'
 #' @return
 #' @export
@@ -32,11 +29,7 @@
                            , use_mtry = floor(sqrt(length(env_names)))
                            , set_min = FALSE
                            , summarise_folds = TRUE
-                           , trees_start = 499
-                           , trees_add = 499
-                           , trees_max = 9999
-                           , accept_delta = formals(make_rf_good)$accept_prev_delta
-                           , accept_run = 3
+                           , ...
                            ) {
 
     .clust_col = clust_col
@@ -60,15 +53,12 @@
     } else env_df
 
 
-    split <- rsample::vfold_cv(env_df_use
+    splits <- rsample::vfold_cv(env_df_use
                                , v = folds
                                , repeats = reps
                                , strata = !!ensym(clust_col)
-                               )
-
-
-    rf_res <- split %>%
-      dplyr::mutate(rf = map(splits
+                               ) %>%
+      dplyr::mutate(rf = purrr::map(splits
                              , ~make_rf_good(rsample::analysis(.)
                                              , clust_col = .clust_col
                                              , context = .context
@@ -83,34 +73,30 @@
                                              )
                              )
                     ) %>%
-      dplyr::mutate(metrics = map_chr(rf,"metrics")
-                    , mtry = map_dbl(rf,"mtry")
-                    , seconds = map_dbl(rf, "seconds")
-                    , rf_res = map(rf, "rf_res")
-                    # , rf_res = map(rf_res
-                    #                , . %>%
-                    #                  dplyr::slice(nrow(.))
-                    #                )
+      dplyr::mutate(metrics = purrr::map_chr(rf,"metrics")
+                    , mtry = purrr::map_dbl(rf,"mtry")
+                    , seconds = purrr::map_dbl(rf, "seconds")
+                    , rf_res = purrr::map(rf, "rf_res")
                     ) %>%
       dplyr::select(-rf) %>%
       tidyr::unnest(cols = c(rf_res)) %>%
       dplyr::select(negate(where(is.list)))
 
-    rf_res <- if("id2" %in% names(rf_res)) {
+    splits <- if("id2" %in% names(splits)) {
 
-        rf_res %>%
+        splits %>%
           dplyr::rename(folds = id2, reps = id)
 
       } else {
 
-        rf_res %>%
+        splits %>%
           dplyr::rename(folds = id)
 
       }
 
     if(summarise_folds) {
 
-      rf_res <- rf_res %>%
+      splits <- splits %>%
         dplyr::group_by(across(contains("reps"))
                         , metrics
                         , mtry
@@ -120,7 +106,11 @@
 
     }
 
-    return(rf_res)
+    stuff <- ls() %>% grep("splits", ., value = TRUE, invert = TRUE)
+
+    rm(list = stuff)
+
+    return(splits)
 
   }
 

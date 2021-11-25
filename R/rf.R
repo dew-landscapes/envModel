@@ -126,7 +126,7 @@
       # Tuning grid
       c_tune_grid <- expand.grid(.mtry = 1:floor(sqrt(length(env_names))))
 
-      rf_good$rf_mtry <- caret::train(x
+      rf_good$mtry <- caret::train(x
                                       , y
                                       , method = "rf"
                                       , trControl = ctrl
@@ -135,7 +135,7 @@
                                       , trace = FALSE
                                       )
 
-      rf_good$mtry <- rf_good$rf_mtry %>%
+      rf_good$mtry <- rf_good$mtry %>%
         `[[` ("finalModel") %>%
         `[[` ("mtry")
 

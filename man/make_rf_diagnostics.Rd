@@ -14,11 +14,7 @@ make_rf_diagnostics(
   use_mtry = floor(sqrt(length(env_names))),
   set_min = FALSE,
   summarise_folds = TRUE,
-  trees_start = 499,
-  trees_add = 499,
-  trees_max = 9999,
-  accept_delta = formals(make_rf_good)$accept_prev_delta,
-  accept_run = 3
+  ...
 )
 }
 \arguments{
@@ -41,12 +37,7 @@ than \code{set_min} cases will be filtered.}
 
 \item{summarise_folds}{Logical. Return mean values for folds or each fold.}
 
-\item{trees_start, trees_add, trees_max}{passed to \verb{\link[envModel]\{make_rf_good\}}}
-
-\item{accept_delta}{Proportion. What change in predictions (as trees are
-added to the forest) is acceptable?}
-
-\item{accept_run}{How many forests (in a row) need to beat \code{accept_delta}?}
+\item{...}{passed to \verb{\link[envModel]\{make_rf_good\}}}
 }
 \value{
 
