@@ -40,7 +40,7 @@
 
 
 <meta property="og:title" content="Run random forest, returning only diagnostic values. — make_rf_diagnostics" />
-<meta property="og:description" content="Random forest is run via parsnip with engine randomForest." />
+<meta property="og:description" content="Random forest is run via randomForest::randomForest()." />
 
 
 
@@ -114,7 +114,7 @@
     </div>
 
     <div class="ref-description">
-    <p>Random forest is run via <code>parsnip</code> with engine <code>randomForest</code>.</p>
+    <p>Random forest is run via <code><a href='https://rdrr.io/pkg/randomForest/man/randomForest.html'>randomForest::randomForest()</a></code>.</p>
     </div>
 
     <pre class="usage"><span class='fu'>make_rf_diagnostics</span><span class='op'>(</span>
@@ -132,7 +132,7 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>env_df</th>
-      <td><p>Dataframe with clusters, context and environmental columns.</p></td>
+      <td><p>Dataframe with clusters and environmental columns.</p></td>
     </tr>
     <tr>
       <th>clust_col</th>

@@ -15,7 +15,7 @@ make_rf_diagnostics(
 )
 }
 \arguments{
-\item{env_df}{Dataframe with clusters, context and environmental columns.}
+\item{env_df}{Dataframe with clusters and environmental columns.}
 
 \item{clust_col}{Character. Name of column with cluster membership.}
 
@@ -34,5 +34,5 @@ than \code{set_min} cases will be filtered.}
 
 }
 \description{
-Random forest is run via \code{parsnip} with engine \code{randomForest}.
+Random forest is run via \code{\link[randomForest:randomForest]{randomForest::randomForest()}}.
 }

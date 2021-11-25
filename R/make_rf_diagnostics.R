@@ -2,9 +2,9 @@
 
 #' Run random forest, returning only diagnostic values.
 #'
-#' Random forest is run via `parsnip` with engine `randomForest`.
+#' Random forest is run via [randomForest::randomForest()].
 #'
-#' @param env_df Dataframe with clusters, context and environmental columns.
+#' @param env_df Dataframe with clusters and environmental columns.
 #' @param clust_col Character. Name of column with cluster membership.
 #' @param folds Numeric. How many folds to use in cross-validation?
 #' @param reps Numeric. How many repeats of cross-validation?
@@ -38,6 +38,9 @@
 
     } else env_df
 
+    # getting ellipses (...) to work with purrr::map, see
+    # https://stackoverflow.com/questions/48215325/passing-ellipsis-arguments-to-map-function-purrr-package-r
+    # answer by Matifou
 
     splits <- rsample::vfold_cv(env_df_use
                                , v = folds
@@ -45,13 +48,13 @@
                                , strata = !!ensym(clust_col)
                                ) %>%
       dplyr::mutate(rf = purrr::map(splits
-                                    , ~make_rf_good(rsample::analysis(.)
-                                                    , clust_col = .clust_col
-                                                    , env_names = .env_names
-                                                    , internal_metrics = rsample::assessment(.)
-                                                    , ...
-                                                    )
-                             )
+                                    , function(x, ...) make_rf_good(rsample::analysis(x)
+                                                                    , internal_metrics = rsample::assessment(x)
+                                                                    , clust_col = .clust_col
+                                                                    , ...
+                                                                    )
+                                    , ...
+                                    )
                     ) %>%
       dplyr::mutate(metrics = purrr::map_chr(rf,"metrics")
                     , mtry = purrr::map_dbl(rf,"mtry")
