@@ -7,7 +7,6 @@
 make_rf_good(
   env_df,
   clust_col = "cluster",
-  context = "cell",
   env_names,
   trees_start = 499,
   trees_add = 249,
@@ -26,8 +25,6 @@ make_rf_good(
 \item{env_df}{Dataframe with \code{clust_col}, \code{site_col} and columns \code{env_names}.}
 
 \item{clust_col}{Character. Name of the columns with clusters.}
-
-\item{context}{Character. Name of the columns defining the context.}
 
 \item{env_names}{Character. Name of the environmental variables (e.g.
 \code{names(stack_list)}).}

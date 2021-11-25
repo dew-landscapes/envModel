@@ -42,7 +42,6 @@
 #'
 #' @param env_df Dataframe with `clust_col`, `site_col` and columns `env_names`.
 #' @param clust_col Character. Name of the columns with clusters.
-#' @param context Character. Name of the columns defining the context.
 #' @param env_names Character. Name of the environmental variables (e.g.
 #' `names(stack_list)`).
 #' @param trees_start Number of trees in first random forest run.
@@ -66,7 +65,6 @@
 #' @examples
   make_rf_good <- function(env_df
                            , clust_col = "cluster"
-                           , context = "cell"
                            , env_names
                            , trees_start = 499
                            , trees_add = 249
