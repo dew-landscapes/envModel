@@ -35,12 +35,7 @@
     .clust_col = clust_col
     .context = context
     .env_names = env_names
-    .trees_start = trees_start
-    .trees_add = trees_add
-    .trees_max = trees_max
     .use_mtry = use_mtry
-    .accept_delta = accept_delta
-    .accept_run = accept_run
 
     env_df_use <- if(!isFALSE(set_min)) {
 
@@ -59,18 +54,14 @@
                                , strata = !!ensym(clust_col)
                                ) %>%
       dplyr::mutate(rf = purrr::map(splits
-                             , ~make_rf_good(rsample::analysis(.)
-                                             , clust_col = .clust_col
-                                             , context = .context
-                                             , env_names = .env_names
-                                             , use_mtry = .use_mtry
-                                             , internal_metrics = rsample::assessment(.)
-                                             , trees_start = .trees_start
-                                             , trees_add = .trees_add
-                                             , trees_max = .trees_max
-                                             , accept_delta = .accept_delta
-                                             , accept_run = .accept_run
-                                             )
+                                    , ~make_rf_good(rsample::analysis(.)
+                                                    , clust_col = .clust_col
+                                                    , context = .context
+                                                    , env_names = .env_names
+                                                    , use_mtry = .use_mtry
+                                                    , internal_metrics = rsample::assessment(.)
+                                                    , ...
+                                                    )
                              )
                     ) %>%
       dplyr::mutate(metrics = purrr::map_chr(rf,"metrics")

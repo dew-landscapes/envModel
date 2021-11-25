@@ -260,7 +260,7 @@
 
     rf_good$seconds <- round(as.numeric(difftime(Sys.time(), go_time, units = "secs")),2)
 
-    if(!isTRUE(is.null(out_file))) rio::export(rf_good,out_file)
+    if(!isTRUE(is.null(out_file))) rio::export(rf_good, out_file)
 
     return(rf_good)
 
