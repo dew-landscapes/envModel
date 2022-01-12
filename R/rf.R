@@ -159,12 +159,12 @@
 
       }
 
-      tibble(truth,pred)
+      tibble::tibble(truth,pred)
 
     }
 
 
-    rf_good$rf_res <- tibble(trees = trees_start) %>%
+    rf_good$rf_res <- tibble::tibble(trees = trees_start) %>%
       dplyr::mutate(rf = list(make_rf_quick(x
                                             , y
                                             , trees = trees_start
@@ -214,14 +214,14 @@
 
       prev_delta <- sum(prev_rf$predicted == new_rf$predicted)/length(y)
 
-      prev_kappa <- yardstick::kap(tibble(truth = prev_rf$predicted
+      prev_kappa <- yardstick::kap(tibble::tibble(truth = prev_rf$predicted
                                          , estimate = new_rf$predicted
                                          )
                                   , truth
                                   , estimate
                                   )$.estimate
 
-      rf_good$rf_res <- tibble(rf = list(new_rf)
+      rf_good$rf_res <- tibble::tibble(rf = list(new_rf)
                                 , prev_delta = prev_delta
                                 , prev_kappa = prev_kappa
                                 , ntree = new_rf$ntree
