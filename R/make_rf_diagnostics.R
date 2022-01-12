@@ -31,10 +31,10 @@
     env_df_use <- if(!isFALSE(set_min)) {
 
       env_df %>%
-        dplyr::add_count(!!ensym(clust_col)) %>%
+        dplyr::add_count(!!rlang::ensym(clust_col)) %>%
         dplyr::filter(n > set_min) %>%
         dplyr::select(-n) %>%
-        dplyr::mutate(!!clust_col := factor(!!ensym(clust_col)))
+        dplyr::mutate(!!clust_col := factor(!!rlang::ensym(clust_col)))
 
     } else env_df
 
@@ -45,7 +45,7 @@
     splits <- rsample::vfold_cv(env_df_use
                                , v = folds
                                , repeats = reps
-                               , strata = !!ensym(clust_col)
+                               , strata = !!rlang::ensym(clust_col)
                                ) %>%
       dplyr::mutate(rf = purrr::map(splits
                                     , function(x, ...) make_rf_good(rsample::analysis(x)
