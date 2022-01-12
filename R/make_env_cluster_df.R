@@ -35,7 +35,7 @@
                                 ) {
 
     df <- df %>%
-      dplyr::select(any_of(context),!!ensym(clust_col)) %>%
+      dplyr::select(any_of(context),!!rlang::ensym(clust_col)) %>%
       dplyr::inner_join(df_env %>%
                           na.omit()
                         )
@@ -44,7 +44,7 @@
 
       df_add <- add_clust %>%
         dplyr::select(any_of(context)
-                      , !!ensym(clust_col) := !!ensym(add_clust_col)
+                      , !!rlang::ensym(clust_col) := !!rlang::ensym(add_clust_col)
                       ) %>%
         dplyr::inner_join(add_env %>%
                             na.omit()
@@ -57,11 +57,11 @@
     }
 
     df <- df %>%
-      dplyr::mutate(!!ensym(clust_col) := factor(!!ensym(clust_col))) %>%
-      dplyr::select(any_of(context),!!ensym(clust_col),all_of(env_cols))
+      dplyr::mutate(!!rlang::ensym(clust_col) := factor(!!rlang::ensym(clust_col))) %>%
+      dplyr::select(any_of(context),!!rlang::ensym(clust_col),all_of(env_cols))
 
     df <- if(set_min) df %>%
-      dplyr::add_count(!!ensym(clust_col)) %>%
+      dplyr::add_count(!!rlang::ensym(clust_col)) %>%
       dplyr::filter(n > min_sites) %>%
       dplyr::select(-n) else df
 
