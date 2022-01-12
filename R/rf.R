@@ -93,10 +93,10 @@
     if(!isFALSE(set_min)) {
 
       env_df <- env_df %>%
-        dplyr::add_count(!!ensym(clust_col)) %>%
+        dplyr::add_count(!!rlang::ensym(clust_col)) %>%
         dplyr::filter(n > set_min) %>%
         dplyr::select(-n) %>%
-        dplyr::mutate(!!clust_col := factor(!!ensym(clust_col)))
+        dplyr::mutate(!!clust_col := factor(!!rlang::ensym(clust_col)))
 
     }
 
