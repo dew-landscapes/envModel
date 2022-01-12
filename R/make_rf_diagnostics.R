@@ -80,11 +80,11 @@
     if(summarise_folds) {
 
       splits <- splits %>%
-        dplyr::group_by(across(contains("reps"))
+        dplyr::group_by(dplyr::across(contains("reps"))
                         , metrics
                         , mtry
                         ) %>%
-        dplyr::summarise(across(where(is.numeric), mean, na.rm = TRUE)) %>%
+        dplyr::summarise(dplyr::across(where(is.numeric), mean, na.rm = TRUE)) %>%
         dplyr::ungroup()
 
     }
