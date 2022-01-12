@@ -63,7 +63,7 @@
                     ) %>%
       dplyr::select(-rf) %>%
       tidyr::unnest(cols = c(rf_res)) %>%
-      dplyr::select(negate(where(is.list)))
+      dplyr::select(Negate(where(is.list)))
 
     splits <- if("id2" %in% names(splits)) {
 
