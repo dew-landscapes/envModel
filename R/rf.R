@@ -58,6 +58,8 @@
 #' @param do_imp Logical. Passed to `importance` argument of
 #' [randomForest::randomForest()].
 #' @param out_file Optional name of file to save results.
+#' @param do_gc Logical. Run `gc()` when results are available and all other
+#' objects have been removed.
 #'
 #' @return
 #' @export
@@ -77,6 +79,7 @@
                            , internal_metrics = TRUE
                            , do_imp = FALSE
                            , out_file = NULL
+                           , do_gc = TRUE
                            ) {
 
     .do_imp = do_imp
@@ -260,6 +263,12 @@
     rf_good$seconds <- round(as.numeric(difftime(Sys.time(), go_time, units = "secs")),2)
 
     if(!isTRUE(is.null(out_file))) rio::export(rf_good, out_file)
+
+    stuff <- ls() %>% grep("rf_good", ., value = TRUE, invert = TRUE)
+
+    rm(list = stuff)
+
+    if(do_gc) gc()
 
     return(rf_good)
 

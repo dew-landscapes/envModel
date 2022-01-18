@@ -26,8 +26,6 @@ make_rf_diagnostics(
 \item{set_min}{FALSE or numeric. If numeric, classes in \code{clust_col} with less
 than \code{set_min} cases will be filtered.}
 
-\item{summarise_folds}{Logical. Return mean values for folds or each fold.}
-
 \item{...}{passed to \code{\link[=make_rf_good]{make_rf_good()}}.}
 }
 \value{

@@ -18,7 +18,8 @@ make_rf_good(
   accept_run = 3,
   internal_metrics = TRUE,
   do_imp = FALSE,
-  out_file = NULL
+  out_file = NULL,
+  do_gc = TRUE
 )
 }
 \arguments{
@@ -53,6 +54,9 @@ with a tune grid of \verb{.mtry = 1:floor(sqrt(length(env_names))}.}
 \code{\link[randomForest:randomForest]{randomForest::randomForest()}}.}
 
 \item{out_file}{Optional name of file to save results.}
+
+\item{do_gc}{Logical. Run \code{gc()} when results are available and all other
+objects have been removed.}
 }
 \value{
 

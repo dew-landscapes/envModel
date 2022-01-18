@@ -10,7 +10,6 @@
 #' @param reps Numeric. How many repeats of cross-validation?
 #' @param set_min FALSE or numeric. If numeric, classes in `clust_col` with less
 #' than `set_min` cases will be filtered.
-#' @param summarise_folds Logical. Return mean values for folds or each fold.
 #' @param ... passed to [envModel::make_rf_good()].
 #'
 #' @return
@@ -76,18 +75,6 @@
           dplyr::rename(folds = id)
 
       }
-
-    if(summarise_folds) {
-
-      splits <- splits %>%
-        dplyr::group_by(dplyr::across(contains("reps"))
-                        , metrics
-                        , mtry
-                        ) %>%
-        dplyr::summarise(dplyr::across(where(is.numeric), mean, na.rm = TRUE)) %>%
-        dplyr::ungroup()
-
-    }
 
     stuff <- ls() %>% grep("splits", ., value = TRUE, invert = TRUE)
 
