@@ -47,6 +47,8 @@
     # https://stackoverflow.com/questions/48215325/passing-ellipsis-arguments-to-map-function-purrr-package-r
     # answer by Matifou
 
+    start <- Sys.time()
+
     if(!spatial_cv) {
 
     splits <- rsample::vfold_cv(env_df_use
@@ -128,6 +130,8 @@
       rm(list = stuff)
 
     }
+
+    res$seconds <- as.numeric(difftime(Sys.time(), start, units = "secs"))
 
     return(res)
 
