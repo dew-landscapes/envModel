@@ -131,7 +131,8 @@
   accept_run <span class='op'>=</span> <span class='fl'>3</span>,
   internal_metrics <span class='op'>=</span> <span class='cn'>TRUE</span>,
   do_imp <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  out_file <span class='op'>=</span> <span class='cn'>NULL</span>
+  out_file <span class='op'>=</span> <span class='cn'>NULL</span>,
+  do_gc <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -196,6 +197,11 @@ with a tune grid of <code>.mtry = 1:floor(sqrt(length(env_names))</code>.</p></t
     <tr>
       <th>out_file</th>
       <td><p>Optional name of file to save results.</p></td>
+    </tr>
+    <tr>
+      <th>do_gc</th>
+      <td><p>Logical. Run <code><a href='https://rdrr.io/r/base/gc.html'>gc()</a></code> when results are available and all other
+objects have been removed.</p></td>
     </tr>
     </table>
 

@@ -10,6 +10,10 @@
 #' @param reps Numeric. How many repeats of cross-validation?
 #' @param set_min FALSE or numeric. If numeric, classes in `clust_col` with less
 #' than `set_min` cases will be filtered.
+#' @param `cv_func` Name of function to use to create folds. Needs to create a
+#' `rsplit` object.
+#' @param x Character name of column containing x coordinates.
+#' @param y Character name of column containing y coordinates.
 #' @param ... passed to [envModel::make_rf_good()].
 #'
 #' @return
@@ -21,7 +25,9 @@
                            , folds = 3
                            , reps = 5
                            , set_min = FALSE
-                           , summarise_folds = TRUE
+                           , spatial_cv = FALSE
+                           , x = NULL
+                           , y = NULL
                            , ...
                            ) {
 
@@ -41,11 +47,13 @@
     # https://stackoverflow.com/questions/48215325/passing-ellipsis-arguments-to-map-function-purrr-package-r
     # answer by Matifou
 
+    if(!spatial_cv) {
+
     splits <- rsample::vfold_cv(env_df_use
-                               , v = folds
-                               , repeats = reps
-                               , strata = !!rlang::ensym(clust_col)
-                               ) %>%
+                                , v = folds
+                                , repeats = reps
+                                , strata = !!rlang::ensym(clust_col)
+                                ) %>%
       dplyr::mutate(rf = purrr::map(splits
                                     , function(x, ...) make_rf_good(rsample::analysis(x)
                                                                     , internal_metrics = rsample::assessment(x)
@@ -64,7 +72,7 @@
       tidyr::unnest(cols = c(rf_res)) %>%
       dplyr::select(Negate(where(is.list)))
 
-    splits <- if("id2" %in% names(splits)) {
+    res <- if("id2" %in% names(splits)) {
 
         splits %>%
           dplyr::rename(folds = id2, reps = id)
@@ -76,11 +84,53 @@
 
       }
 
-    stuff <- ls() %>% grep("splits", ., value = TRUE, invert = TRUE)
+    stuff <- ls() %>% grep("res", ., value = TRUE, invert = TRUE)
 
     rm(list = stuff)
 
-    return(splits)
+    } else if(spatial_cv) {
+
+      # sf object
+      env_df_sf <- sf::st_as_sf(env_df_use
+                                , coords = c(x, y)
+                                )
+
+      # task
+      task <- mlr3spatiotempcv::TaskClassifST$new("env_sf"
+                                                  , backend = env_df_sf
+                                                  , target = "cluster"
+                                                  )
+
+      # learner
+      learner <- mlr3::lrn("classif.ranger")
+      mlr3::set_threads(learner, n = use_cores)
+
+
+      # spatial resampling
+      sp_re <- mlr3::rsmp("repeated_spcv_tiles"
+                          , nsplit = as.integer(c(ceiling(sqrt(folds)), floor(sqrt(folds))))
+                          , repeats = as.integer(reps)
+                          )
+
+      # sample
+      results <- mlr3::resample(task
+                                , learner
+                                , sp_re
+                                )
+
+      preds <- results$prediction()
+
+      res <- envModel::get_conf_metrics(truth_vec = preds$truth
+                                        , pred_vec = preds$response
+                                        )
+
+      stuff <- ls() %>% grep("res", ., value = TRUE, invert = TRUE)
+
+      rm(list = stuff)
+
+    }
+
+    return(res)
 
   }
 

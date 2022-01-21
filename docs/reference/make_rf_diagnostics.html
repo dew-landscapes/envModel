@@ -123,7 +123,9 @@
   folds <span class='op'>=</span> <span class='fl'>3</span>,
   reps <span class='op'>=</span> <span class='fl'>5</span>,
   set_min <span class='op'>=</span> <span class='cn'>FALSE</span>,
-  summarise_folds <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  spatial_cv <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  x <span class='op'>=</span> <span class='cn'>NULL</span>,
+  y <span class='op'>=</span> <span class='cn'>NULL</span>,
   <span class='va'>...</span>
 <span class='op'>)</span></pre>
 
@@ -152,12 +154,21 @@
 than <code>set_min</code> cases will be filtered.</p></td>
     </tr>
     <tr>
-      <th>summarise_folds</th>
-      <td><p>Logical. Return mean values for folds or each fold.</p></td>
+      <th>x</th>
+      <td><p>Character name of column containing x coordinates.</p></td>
+    </tr>
+    <tr>
+      <th>y</th>
+      <td><p>Character name of column containing y coordinates.</p></td>
     </tr>
     <tr>
       <th>...</th>
       <td><p>passed to <code><a href='make_rf_good.html'>make_rf_good()</a></code>.</p></td>
+    </tr>
+    <tr>
+      <th>`cv_func`</th>
+      <td><p>Name of function to use to create folds. Needs to create a
+<code>rsplit</code> object.</p></td>
     </tr>
     </table>
 

@@ -18,7 +18,7 @@ get_conf_metrics <- function(pred_df
                              , pred_vec = NULL
                              ) {
 
-  tib <- if(isTRUE(is.null(pred_df))) {
+  tib <- if(isTRUE(!is.null(truth_vec) & !is.null(pred_vec))) {
 
     tibble::tibble(truth = truth_vec
                    , pred = pred_vec

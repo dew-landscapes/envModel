@@ -10,7 +10,9 @@ make_rf_diagnostics(
   folds = 3,
   reps = 5,
   set_min = FALSE,
-  summarise_folds = TRUE,
+  spatial_cv = FALSE,
+  x = NULL,
+  y = NULL,
   ...
 )
 }
@@ -26,7 +28,14 @@ make_rf_diagnostics(
 \item{set_min}{FALSE or numeric. If numeric, classes in \code{clust_col} with less
 than \code{set_min} cases will be filtered.}
 
+\item{x}{Character name of column containing x coordinates.}
+
+\item{y}{Character name of column containing y coordinates.}
+
 \item{...}{passed to \code{\link[=make_rf_good]{make_rf_good()}}.}
+
+\item{`cv_func`}{Name of function to use to create folds. Needs to create a
+\code{rsplit} object.}
 }
 \value{
 
