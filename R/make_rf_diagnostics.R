@@ -10,8 +10,9 @@
 #' @param reps Numeric. How many repeats of cross-validation?
 #' @param set_min FALSE or numeric. If numeric, classes in `clust_col` with less
 #' than `set_min` cases will be filtered.
-#' @param `cv_func` Name of function to use to create folds. Needs to create a
-#' `rsplit` object.
+#' @param `spatial_cv` Logical. If `FALSE` workflow follows a tidymodels
+#' workflow (with cv using [rsample::vfold_cv()]). If `TRUE` follows a `mlr3`
+#' workflow (with cv using [mlr3::rsmp()] with "repeated_spcv_tiles").
 #' @param x Character name of column containing x coordinates.
 #' @param y Character name of column containing y coordinates.
 #' @param ... passed to [envModel::make_rf_good()].

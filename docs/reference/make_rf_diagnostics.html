@@ -166,9 +166,10 @@ than <code>set_min</code> cases will be filtered.</p></td>
       <td><p>passed to <code><a href='make_rf_good.html'>make_rf_good()</a></code>.</p></td>
     </tr>
     <tr>
-      <th>`cv_func`</th>
-      <td><p>Name of function to use to create folds. Needs to create a
-<code>rsplit</code> object.</p></td>
+      <th>`spatial_cv`</th>
+      <td><p>Logical. If <code>FALSE</code> workflow follows a tidymodels
+workflow (with cv using <code><a href='https://rsample.tidymodels.org/reference/vfold_cv.html'>rsample::vfold_cv()</a></code>). If <code>TRUE</code> follows a <code>mlr3</code>
+workflow (with cv using <code><a href='https://mlr3.mlr-org.com/reference/mlr_sugar.html'>mlr3::rsmp()</a></code> with "repeated_spcv_tiles").</p></td>
     </tr>
     </table>
 

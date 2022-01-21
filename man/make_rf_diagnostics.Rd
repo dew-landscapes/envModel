@@ -34,8 +34,9 @@ than \code{set_min} cases will be filtered.}
 
 \item{...}{passed to \code{\link[=make_rf_good]{make_rf_good()}}.}
 
-\item{`cv_func`}{Name of function to use to create folds. Needs to create a
-\code{rsplit} object.}
+\item{`spatial_cv`}{Logical. If \code{FALSE} workflow follows a tidymodels
+workflow (with cv using \code{\link[rsample:vfold_cv]{rsample::vfold_cv()}}). If \code{TRUE} follows a \code{mlr3}
+workflow (with cv using \code{\link[mlr3:mlr_sugar]{mlr3::rsmp()}} with "repeated_spcv_tiles").}
 }
 \value{
 
