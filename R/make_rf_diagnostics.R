@@ -109,9 +109,9 @@
 
       # spatial resampling
       sp_re <- mlr3::rsmp("repeated_spcv_tiles"
-                          , nsplit = as.integer(c(ceiling(sqrt(folds)), floor(sqrt(folds))))
-                          , repeats = as.integer(reps)
-                          )
+                                          , nsplit = as.integer(c(ceiling(sqrt(folds)), floor(sqrt(folds))))
+                                          , repeats = as.integer(reps)
+                                          )
 
       # sample
       results <- mlr3::resample(task
