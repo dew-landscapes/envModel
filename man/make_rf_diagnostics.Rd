@@ -42,5 +42,5 @@ workflow (with cv using \code{\link[mlr3:mlr_sugar]{mlr3::rsmp()}} with "repeate
 
 }
 \description{
-Random forest is run via \code{\link[randomForest:randomForest]{randomForest::randomForest()}}.
+Run random forest, returning only diagnostic values.
 }

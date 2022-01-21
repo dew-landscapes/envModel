@@ -2,7 +2,6 @@
 
 #' Run random forest, returning only diagnostic values.
 #'
-#' Random forest is run via [randomForest::randomForest()].
 #'
 #' @param env_df Dataframe with clusters and environmental columns.
 #' @param clust_col Character. Name of column with cluster membership.
@@ -104,7 +103,6 @@
 
       # learner
       learner <- mlr3::lrn("classif.ranger")
-      mlr3::set_threads(learner, n = use_cores)
 
 
       # spatial resampling
