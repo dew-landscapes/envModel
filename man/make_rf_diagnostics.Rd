@@ -10,10 +10,9 @@ make_rf_diagnostics(
   folds = 3,
   reps = 5,
   set_min = FALSE,
-  spatial_cv = FALSE,
+  mlr3_cv_method = "repeated_cv",
   x = NULL,
-  y = NULL,
-  ...
+  y = NULL
 )
 }
 \arguments{
@@ -28,15 +27,12 @@ make_rf_diagnostics(
 \item{set_min}{FALSE or numeric. If numeric, classes in \code{clust_col} with less
 than \code{set_min} cases will be filtered.}
 
+\item{mlr3_cv_method}{Method to use with \code{\link[mlr3:rmsp]{mlr3::rmsp()}} (as character, e.g.
+"repeated_cv" or "repeated_cv".}
+
 \item{x}{Character name of column containing x coordinates.}
 
 \item{y}{Character name of column containing y coordinates.}
-
-\item{...}{passed to \code{\link[=make_rf_good]{make_rf_good()}}.}
-
-\item{`spatial_cv`}{Logical. If \code{FALSE} workflow follows a tidymodels
-workflow (with cv using \code{\link[rsample:vfold_cv]{rsample::vfold_cv()}}). If \code{TRUE} follows a \code{mlr3}
-workflow (with cv using \code{\link[mlr3:mlr_sugar]{mlr3::rsmp()}} with "repeated_spcv_tiles").}
 }
 \value{
 

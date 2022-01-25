@@ -9,12 +9,10 @@
 #' @param reps Numeric. How many repeats of cross-validation?
 #' @param set_min FALSE or numeric. If numeric, classes in `clust_col` with less
 #' than `set_min` cases will be filtered.
-#' @param `spatial_cv` Logical. If `FALSE` workflow follows a tidymodels
-#' workflow (with cv using [rsample::vfold_cv()]). If `TRUE` follows a `mlr3`
-#' workflow (with cv using [mlr3::rsmp()] with "repeated_spcv_tiles").
+#' @param mlr3_cv_method Method to use with [mlr3::rmsp()] (as character, e.g.
+#' "repeated_cv" or "repeated_cv".
 #' @param x Character name of column containing x coordinates.
 #' @param y Character name of column containing y coordinates.
-#' @param ... passed to [envModel::make_rf_good()].
 #'
 #' @return
 #' @export
@@ -25,11 +23,12 @@
                            , folds = 3
                            , reps = 5
                            , set_min = FALSE
-                           , spatial_cv = FALSE
+                           , mlr3_cv_method = "repeated_cv"
                            , x = NULL
                            , y = NULL
-                           , ...
                            ) {
+
+    stopifnot(mlr3_cv_method %in% data.table::as.data.table(mlr_resamplings)$key)
 
     .clust_col = clust_col
 
@@ -43,80 +42,34 @@
 
     } else env_df
 
-    # getting ellipses (...) to work with purrr::map, see
-    # https://stackoverflow.com/questions/48215325/passing-ellipsis-arguments-to-map-function-purrr-package-r
-    # answer by Matifou
+    start_time <- Sys.time()
 
-    start <- Sys.time()
+    if(!grepl("spcv|sptcv", mlr3_cv_method)) {
 
-    if(!spatial_cv) {
-
-    splits <- rsample::vfold_cv(env_df_use
-                                , v = folds
-                                , repeats = reps
-                                , strata = !!rlang::ensym(clust_col)
-                                ) %>%
-      dplyr::mutate(rf = purrr::map(splits
-                                    , function(x, ...) make_rf_good(rsample::analysis(x)
-                                                                    , internal_metrics = rsample::assessment(x)
-                                                                    , clust_col = .clust_col
-                                                                    , ...
-                                                                    )
-                                    , ...
-                                    )
-                    ) %>%
-      dplyr::mutate(metrics = purrr::map_chr(rf,"metrics")
-                    , mtry = purrr::map_dbl(rf,"mtry")
-                    , seconds = purrr::map_dbl(rf, "seconds")
-                    , rf_res = purrr::map(rf, "rf_res")
-                    ) %>%
-      dplyr::select(-rf) %>%
-      tidyr::unnest(cols = c(rf_res)) %>%
-      dplyr::select(Negate(where(is.list)))
-
-    res <- if("id2" %in% names(splits)) {
-
-        splits %>%
-          dplyr::rename(folds = id2, reps = id)
-
-      } else {
-
-        splits %>%
-          dplyr::rename(folds = id)
-
-      }
-
-    stuff <- ls() %>% grep("res", ., value = TRUE, invert = TRUE)
-
-    rm(list = stuff)
-
-    } else if(spatial_cv) {
-
-      # sf object
-      env_df_sf <- sf::st_as_sf(env_df_use
-                                , coords = c(x, y)
-                                )
+      #-----non-spatial------
 
       # task
-      task <- mlr3spatiotempcv::TaskClassifST$new("env_sf"
-                                                  , backend = env_df_sf
-                                                  , target = "cluster"
-                                                  )
+      task <- mlr3::TaskClassif$new("env_rf"
+                                    , backend = env_df_use
+                                    , target = clust_col
+                                    )
+
+      task$col_roles$stratum <- clust_col
 
       # learner
       learner <- mlr3::lrn("classif.ranger")
 
 
       # spatial resampling
-      sp_re <- mlr3::rsmp("repeated_spcv_tiles"
-                                          , nsplit = as.integer(c(ceiling(sqrt(folds)), floor(sqrt(folds))))
-                                          , repeats = as.integer(reps)
-                                          )
+      re <- mlr3::rsmp(mlr3_cv_method
+                          , folds = as.integer(folds)
+                          , repeats = as.integer(reps)
+                          )
 
       # sample
       results <- mlr3::resample(task
                                 , learner
-                                , sp_re
+                                , re
                                 )
 
       preds <- results$prediction()
@@ -125,13 +78,53 @@
                                         , pred_vec = preds$response
                                         )
 
-      stuff <- ls() %>% grep("res", ., value = TRUE, invert = TRUE)
+    } else if(grepl("spcv|sptcv", mlr3_cv_method)) {
 
-      rm(list = stuff)
+      #-------spatial-------
+
+      # sf object
+      env_df_sf <- sf::st_as_sf(env_df_use
+                                , coords = c(x, y)
+                                )
+
+      # task
+      task <- mlr3spatiotempcv::TaskClassifST$new("env_rf"
+                                                  , backend = env_df_sf
+                                                  , target = clust_col
+                                                  )
+
+      task$col_roles$stratum <- clust_col
+
+      # learner
+      learner <- mlr3::lrn("classif.ranger")
+      mlr3::set_threads(learner, n = )
+
+
+      # spatial resampling
+      re <- mlr3::rsmp(mlr3_cv_method
+                       , nsplit = as.integer(c(ceiling(sqrt(folds)), floor(sqrt(folds))))
+                       , repeats = as.integer(reps)
+                       )
+
+      # sample
+      results <- mlr3::resample(task
+                                , learner
+                                , re
+                                )
+
+      preds <- results$prediction()
+
+      res <- envModel::get_conf_metrics(truth_vec = preds$truth
+                                        , pred_vec = preds$response
+                                        )
 
     }
 
-    res$seconds <- as.numeric(difftime(Sys.time(), start, units = "secs"))
+    res$seconds <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
+
+    stuff <- ls() %>% grep("res", ., value = TRUE, invert = TRUE)
+
+    rm(list = stuff)
 
     return(res)
 
