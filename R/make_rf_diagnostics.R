@@ -7,10 +7,15 @@
 #' @param clust_col Character. Name of column with cluster membership.
 #' @param folds Numeric. How many folds to use in cross-validation?
 #' @param reps Numeric. How many repeats of cross-validation?
+#' @param range_m Numeric. The distance in metres (regardless of the unit
+#' of the reference system of the input data) for block size(s) if using
+#' [blockCV::spatialBlock()]. If reps > 1, an equivalent number of range_m
+#' values are required to ensure the folds are different between repetitions.
+#' `repeated_spcv_block`.
 #' @param set_min FALSE or numeric. If numeric, classes in `clust_col` with less
 #' than `set_min` cases will be filtered.
 #' @param mlr3_cv_method Method to use with [mlr3::rmsp()] (as character, e.g.
-#' "repeated_cv" or "repeated_cv".
+#' "repeated_cv" or "repeated_spcv_block".
 #' @param x Character name of column containing x coordinates.
 #' @param y Character name of column containing y coordinates.
 #'
@@ -20,8 +25,9 @@
 #' @examples
   make_rf_diagnostics <- function(env_df
                            , clust_col = "cluster"
-                           , folds = 3
-                           , reps = 5
+                           , folds = 3L
+                           , reps = 5L
+                           , range_m = as.integer(seq(5000L, 10000L, length.out = reps))
                            , set_min = FALSE
                            , mlr3_cv_method = "repeated_cv"
                            , x = NULL
@@ -59,8 +65,7 @@
       # learner
       learner <- mlr3::lrn("classif.ranger")
 
-
-      # spatial resampling
+      # resampling
       re <- mlr3::rsmp(mlr3_cv_method
                           , folds = as.integer(folds)
                           , repeats = as.integer(reps)
@@ -97,13 +102,12 @@
 
       # learner
       learner <- mlr3::lrn("classif.ranger")
-      mlr3::set_threads(learner, n = )
-
 
       # spatial resampling
       re <- mlr3::rsmp(mlr3_cv_method
-                       , nsplit = as.integer(c(ceiling(sqrt(folds)), floor(sqrt(folds))))
+                       , folds = as.integer(folds)
                        , repeats = as.integer(reps)
+                       , range = range_m
                        )
 
       # sample

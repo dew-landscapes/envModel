@@ -7,8 +7,9 @@
 make_rf_diagnostics(
   env_df,
   clust_col = "cluster",
-  folds = 3,
-  reps = 5,
+  folds = 3L,
+  reps = 5L,
+  range_m = as.integer(seq(5000L, 10000L, length.out = reps)),
   set_min = FALSE,
   mlr3_cv_method = "repeated_cv",
   x = NULL,
@@ -24,11 +25,17 @@ make_rf_diagnostics(
 
 \item{reps}{Numeric. How many repeats of cross-validation?}
 
+\item{range_m}{Numeric. The distance in metres (regardless of the unit
+of the reference system of the input data) for block size(s) if using
+\code{\link[blockCV:spatialBlock]{blockCV::spatialBlock()}}. If reps > 1, an equivalent number of range_m
+values are required to ensure the folds are different between repetitions.
+\code{repeated_spcv_block}.}
+
 \item{set_min}{FALSE or numeric. If numeric, classes in \code{clust_col} with less
 than \code{set_min} cases will be filtered.}
 
 \item{mlr3_cv_method}{Method to use with \code{\link[mlr3:rmsp]{mlr3::rmsp()}} (as character, e.g.
-"repeated_cv" or "repeated_cv".}
+"repeated_cv" or "repeated_spcv_block".}
 
 \item{x}{Character name of column containing x coordinates.}
 

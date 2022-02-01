@@ -120,8 +120,9 @@
     <pre class="usage"><span class='fu'>make_rf_diagnostics</span><span class='op'>(</span>
   <span class='va'>env_df</span>,
   clust_col <span class='op'>=</span> <span class='st'>"cluster"</span>,
-  folds <span class='op'>=</span> <span class='fl'>3</span>,
-  reps <span class='op'>=</span> <span class='fl'>5</span>,
+  folds <span class='op'>=</span> <span class='fl'>3L</span>,
+  reps <span class='op'>=</span> <span class='fl'>5L</span>,
+  range_m <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/integer.html'>as.integer</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span><span class='op'>(</span><span class='fl'>5000L</span>, <span class='fl'>10000L</span>, length.out <span class='op'>=</span> <span class='va'>reps</span><span class='op'>)</span><span class='op'>)</span>,
   set_min <span class='op'>=</span> <span class='cn'>FALSE</span>,
   mlr3_cv_method <span class='op'>=</span> <span class='st'>"repeated_cv"</span>,
   x <span class='op'>=</span> <span class='cn'>NULL</span>,
@@ -148,6 +149,14 @@
       <td><p>Numeric. How many repeats of cross-validation?</p></td>
     </tr>
     <tr>
+      <th>range_m</th>
+      <td><p>Numeric. The distance in metres (regardless of the unit
+of the reference system of the input data) for block size(s) if using
+<code><a href='https://rdrr.io/pkg/blockCV/man/spatialBlock.html'>blockCV::spatialBlock()</a></code>. If reps &gt; 1, an equivalent number of range_m
+values are required to ensure the folds are different between repetitions.
+<code>repeated_spcv_block</code>.</p></td>
+    </tr>
+    <tr>
       <th>set_min</th>
       <td><p>FALSE or numeric. If numeric, classes in <code>clust_col</code> with less
 than <code>set_min</code> cases will be filtered.</p></td>
@@ -155,7 +164,7 @@ than <code>set_min</code> cases will be filtered.</p></td>
     <tr>
       <th>mlr3_cv_method</th>
       <td><p>Method to use with <code>mlr3::rmsp()</code> (as character, e.g.
-"repeated_cv" or "repeated_cv".</p></td>
+"repeated_cv" or "repeated_spcv_block".</p></td>
     </tr>
     <tr>
       <th>x</th>
