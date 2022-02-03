@@ -57,6 +57,8 @@
 #' @param internal_metrics TRUE or test data in same format as `env_df`.
 #' @param do_imp Logical. Passed to `importance` argument of
 #' [randomForest::randomForest()].
+#' @param keep_rf Logical. If true, `randomForest` object will be included in
+#' output. Defaults to `FALSE` to save memory.
 #' @param out_file Optional name of file to save results.
 #' @param do_gc Logical. Run `gc()` when results are available and all other
 #' objects have been removed.
@@ -78,6 +80,7 @@
                            , accept_run = 3
                            , internal_metrics = TRUE
                            , do_imp = FALSE
+                           , keep_rf = FALSE
                            , out_file = NULL
                            , do_gc = TRUE
                            ) {
@@ -166,23 +169,24 @@
 
     }
 
+    rf <- make_rf_quick(x
+                        , y
+                        , trees = trees_start
+                        , if(rf_cores > 1) cl_obj = cl
+                        , use_mtry = rf_good$mtry
+                        , do_imp = .do_imp
+                        )
+
+    metrics <- get_conf_metrics(get_truth_pred(internal_metrics
+                                               , rf
+                                               )
+                                )
+
+    if(keep_rf) rf_good$rf <- rf
 
     rf_good$rf_res <- tibble::tibble(trees = trees_start) %>%
-      dplyr::mutate(rf = list(make_rf_quick(x
-                                            , y
-                                            , trees = trees_start
-                                            , if(rf_cores > 1) cl_obj = cl
-                                            , use_mtry = rf_good$mtry
-                                            , do_imp = .do_imp
-                                            )
-                              )
-                    , metrics = purrr::map(rf
-                                           , ~get_conf_metrics(get_truth_pred(internal_metrics
-                                                                              , .
-                                                                              )
-                                                               )
-                                           )
-                    , ntree = purrr::map_dbl(rf,"ntree")
+      dplyr::mutate(metrics = list(metrics)
+                    , ntree = rf$ntree
                     ) %>%
       tidyr::unnest(cols = c(metrics)) %>%
       dplyr::mutate(prev_kappa = kap
@@ -198,7 +202,7 @@
       )
     ) {
 
-      prev_rf <- rf_good$rf_res$rf[nrow(rf_good$rf_res)][[1]]
+      prev_rf <- if(exisits("new_rf")) new_rf else rf
 
       next_rf <- make_rf_quick(x
                                , y
@@ -224,11 +228,12 @@
                                   , estimate
                                   )$.estimate
 
-      rf_good$rf_res <- tibble::tibble(rf = list(new_rf)
-                                , prev_delta = prev_delta
-                                , prev_kappa = prev_kappa
-                                , ntree = new_rf$ntree
-                                ) %>%
+      if(keep_rf) rf_good$rf <- new_rf
+
+      rf_good$rf_res <- tibble::tibble(prev_delta = prev_delta
+                                       , prev_kappa = prev_kappa
+                                       , ntree = new_rf$ntree
+                                       ) %>%
                            dplyr::bind_cols(metrics)
 
       counter <- if(prev_delta >= accept_delta) {

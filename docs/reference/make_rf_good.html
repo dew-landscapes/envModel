@@ -131,6 +131,7 @@
   accept_run <span class='op'>=</span> <span class='fl'>3</span>,
   internal_metrics <span class='op'>=</span> <span class='cn'>TRUE</span>,
   do_imp <span class='op'>=</span> <span class='cn'>FALSE</span>,
+  keep_rf <span class='op'>=</span> <span class='cn'>FALSE</span>,
   out_file <span class='op'>=</span> <span class='cn'>NULL</span>,
   do_gc <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
@@ -193,6 +194,11 @@ with a tune grid of <code>.mtry = 1:floor(sqrt(length(env_names))</code>.</p></t
       <th>do_imp</th>
       <td><p>Logical. Passed to <code>importance</code> argument of
 <code><a href='https://rdrr.io/pkg/randomForest/man/randomForest.html'>randomForest::randomForest()</a></code>.</p></td>
+    </tr>
+    <tr>
+      <th>keep_rf</th>
+      <td><p>Logical. If true, <code>randomForest</code> object will be included in
+output. Defaults to <code>FALSE</code> to save memory.</p></td>
     </tr>
     <tr>
       <th>out_file</th>

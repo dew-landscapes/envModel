@@ -30,8 +30,8 @@ make_rf_diagnostics_spatialcv <- function(env_df
                                           , clust_col = "cluster"
                                           , folds = 3L
                                           , reps = 5L
-                                          , range_min = 10000
-                                          , range_max = 20000
+                                          , range_min = 20000
+                                          , range_max = 100000
                                           , coords = c("long", "lat")
                                           , crs_df = 4283
                                           , crs_analysis = 3577
@@ -47,8 +47,7 @@ make_rf_diagnostics_spatialcv <- function(env_df
                  ) %>%
     sf::st_transform(crs = crs_analysis)
 
-  area <- raster::extent(env_df_sf) %>%
-    round(digits = -2)
+  area <- terra::ext(env_df_sf)
 
   res <- tibble::tibble(fold = 1:folds) %>%
     dplyr::inner_join(tibble::tibble(rep = 1:reps

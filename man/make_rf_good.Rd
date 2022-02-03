@@ -18,6 +18,7 @@ make_rf_good(
   accept_run = 3,
   internal_metrics = TRUE,
   do_imp = FALSE,
+  keep_rf = FALSE,
   out_file = NULL,
   do_gc = TRUE
 )
@@ -52,6 +53,9 @@ with a tune grid of \verb{.mtry = 1:floor(sqrt(length(env_names))}.}
 
 \item{do_imp}{Logical. Passed to \code{importance} argument of
 \code{\link[randomForest:randomForest]{randomForest::randomForest()}}.}
+
+\item{keep_rf}{Logical. If true, \code{randomForest} object will be included in
+output. Defaults to \code{FALSE} to save memory.}
 
 \item{out_file}{Optional name of file to save results.}
 
