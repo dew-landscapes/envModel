@@ -6,7 +6,8 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Function reference • envModel</title>
+<title>Run random forest, returning only diagnostic values from spatial cross
+validation. — make_rf_diagnostics_spatialcv • envModel</title>
 
 
 <!-- jquery -->
@@ -39,7 +40,9 @@
 
 
 
-<meta property="og:title" content="Function reference" />
+<meta property="og:title" content="Run random forest, returning only diagnostic values from spatial cross
+validation. — make_rf_diagnostics_spatialcv" />
+<meta property="og:description" content="Random forest is run via randomForest::randomForest()." />
 
 
 
@@ -58,7 +61,7 @@
   </head>
 
   <body data-spy="scroll" data-target="#toc">
-    <div class="container template-reference-index">
+    <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -105,73 +108,89 @@
       </header>
 
 <div class="row">
-  <div class="contents col-md-9">
+  <div class="col-md-9 contents">
     <div class="page-header">
-      <h1>Reference</h1>
+    <h1>Run random forest, returning only diagnostic values from spatial cross
+validation.</h1>
+    <small class="dont-index">Source: <a href='https://github.com/Acanthiza/envModel/blob/master/R/make_rf_diagnostics_spatialcv.R'><code>R/make_rf_diagnostics_spatialcv.R</code></a></small>
+    <div class="hidden name"><code>make_rf_diagnostics_spatialcv.Rd</code></div>
     </div>
 
-    <table class="ref-index">
+    <div class="ref-description">
+    <p>Random forest is run via <code><a href='https://rdrr.io/pkg/randomForest/man/randomForest.html'>randomForest::randomForest()</a></code>.</p>
+    </div>
 
-    <colgroup>
-      
-      <col class="alias" />
-      <col class="title" />
-    </colgroup>
+    <pre class="usage"><span class='fu'>make_rf_diagnostics_spatialcv</span><span class='op'>(</span>
+  <span class='va'>env_df</span>,
+  clust_col <span class='op'>=</span> <span class='st'>"cluster"</span>,
+  folds <span class='op'>=</span> <span class='fl'>3L</span>,
+  reps <span class='op'>=</span> <span class='fl'>5L</span>,
+  range_min <span class='op'>=</span> <span class='fl'>10000</span>,
+  range_max <span class='op'>=</span> <span class='fl'>20000</span>,
+  coords <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"long"</span>, <span class='st'>"lat"</span><span class='op'>)</span>,
+  crs_df <span class='op'>=</span> <span class='fl'>4283</span>,
+  crs_analysis <span class='op'>=</span> <span class='fl'>3577</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span></pre>
 
-    <tbody>
-      <tr>
-        <th colspan="2">
-          <h2 id="section-all-functions" class="hasAnchor"><a href="#section-all-functions" class="anchor"></a>All functions</h2>
-          <p class="section-desc"></p>
-        </th>
-      </tr>
-      
-      
-    </tbody><tbody>
-      
-      
-      <tr>
-        
-        <td>
-          <p><code><a href="get_conf_metrics.html">get_conf_metrics()</a></code> </p>
-        </td>
-        <td><p>Calculate diagnostics</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="make_env_clust_df.html">make_env_clust_df()</a></code> </p>
-        </td>
-        <td><p>Add explanatory (environmental) variables to 'site' dataframe.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="make_rf_diagnostics.html">make_rf_diagnostics()</a></code> </p>
-        </td>
-        <td><p>Run random forest, returning only diagnostic values.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="make_rf_diagnostics_old.html">make_rf_diagnostics_old()</a></code> </p>
-        </td>
-        <td><p>Run random forest, usually returning only diagnostic values.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="make_rf_diagnostics_spatialcv.html">make_rf_diagnostics_spatialcv()</a></code> </p>
-        </td>
-        <td><p>Run random forest, returning only diagnostic values from spatial cross
-validation.</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="make_rf_good.html">make_rf_good()</a></code> </p>
-        </td>
-        <td><p>Iteratively add trees to random forest until predictions stabilise</p></td>
-      </tr>
-    </tbody>
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>env_df</th>
+      <td><p>Dataframe with clusters and environmental columns.</p></td>
+    </tr>
+    <tr>
+      <th>clust_col</th>
+      <td><p>Character. Name of column with cluster membership.</p></td>
+    </tr>
+    <tr>
+      <th>folds</th>
+      <td><p>Numeric. How many folds to use in cross-validation?</p></td>
+    </tr>
+    <tr>
+      <th>reps</th>
+      <td><p>Numeric. How many repeats of cross-validation?</p></td>
+    </tr>
+    <tr>
+      <th>range_min, range_max</th>
+      <td><p>Numeric. Metres. Minimum and maximum grid sizes
+for spatial tiles. Reps will be made using <code>range &lt;- seq(range_min, range_max , length.out = reps)</code></p></td>
+    </tr>
+    <tr>
+      <th>coords</th>
+      <td><p>Character vector of length 2. Names of columns in <code>env_df</code> with
+x and y coordinates.</p></td>
+    </tr>
+    <tr>
+      <th>crs_df</th>
+      <td><p>Coordinate reference system for <code>coords</code>. Passed to the
+<code>crs</code> argument of <code><a href='https://r-spatial.github.io/sf/reference/st_as_sf.html'>sf::st_as_sf()</a></code></p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>passed to <code><a href='make_rf_good.html'>make_rf_good()</a></code>.</p></td>
+    </tr>
+    <tr>
+      <th>crs_analysis.</th>
+      <td><p>Coordinate reference system for the analysis. Should be
+a projected crs so that <code>range_min</code> and <code>range_max</code> are interpreted
+correctly.</p></td>
+    </tr>
+    <tr>
+      <th>set_min</th>
+      <td><p>FALSE or numeric. If numeric, classes in <code>clust_col</code> with less
+than <code>set_min</code> cases will be filtered.</p></td>
+    </tr>
     </table>
-  </div>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+
+    
+
+
+
+  </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
       <h2 data-toc-skip>Contents</h2>

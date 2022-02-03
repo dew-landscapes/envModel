@@ -154,9 +154,9 @@
 
       } else {
 
-        new_data <- int_met[ , colSums(is.na(int_met)) == 0]
+        new_data <- int_met[, env_names]
 
-        truth <- new_data[clust_col][[1]]
+        truth <- int_met[clust_col][[1]]
 
         pred <- predict(rf, newdata = new_data)
 
