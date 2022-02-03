@@ -116,11 +116,11 @@
     }
 
     res <- results$score() %>%
-      dplyr::mutate(metrics = map(prediction
-                                  , ~envModel::get_conf_metrics(truth_vec = .$truth
-                                                                , pred_vec = .$response
-                                                                )
-                                  )
+      dplyr::mutate(metrics = purrr::map(prediction
+                                         , ~envModel::get_conf_metrics(truth_vec = .$truth
+                                                                       , pred_vec = .$response
+                                                                       )
+                                         )
                     ) %>%
       dplyr::select(iteration, classif.ce, metrics) %>%
       tidyr::unnest(cols = c(metrics))
