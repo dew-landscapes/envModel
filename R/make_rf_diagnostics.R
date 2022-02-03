@@ -16,8 +16,10 @@
 #' than `set_min` cases will be filtered.
 #' @param mlr3_cv_method Method to use with [mlr3::rmsp()] (as character, e.g.
 #' "repeated_cv" or "repeated_spcv_block".
-#' @param x Character name of column containing x coordinates.
-#' @param y Character name of column containing y coordinates.
+#' @param coords Character vector of length 2. Names of columns in `env_df` with
+#' x and y coordinates.
+#' @param crs_df Coordinate reference system for `coords`. Passed to the
+#' `crs` argument of [sf::st_as_sf()].
 #'
 #' @return
 #' @export
@@ -27,11 +29,11 @@
                            , clust_col = "cluster"
                            , folds = 3L
                            , reps = 5L
-                           , range_m = as.integer(seq(5000L, 10000L, length.out = reps))
+                           , range_m = as.integer(seq(20000L, 100000L, length.out = reps))
                            , set_min = FALSE
                            , mlr3_cv_method = "repeated_cv"
-                           , x = NULL
-                           , y = NULL
+                           , coords = c("long", "lat")
+                           , crs_df = 4283
                            ) {
 
     stopifnot(mlr3_cv_method %in% data.table::as.data.table(mlr_resamplings)$key)
@@ -77,19 +79,14 @@
                                 , re
                                 )
 
-      preds <- results$prediction()
-
-      res <- envModel::get_conf_metrics(truth_vec = preds$truth
-                                        , pred_vec = preds$response
-                                        )
-
     } else if(grepl("spcv|sptcv", mlr3_cv_method)) {
 
       #-------spatial-------
 
       # sf object
       env_df_sf <- sf::st_as_sf(env_df_use
-                                , coords = c(x, y)
+                                , coords = use_coords
+                                , crs = crs_df
                                 )
 
       # task
@@ -116,13 +113,17 @@
                                 , re
                                 )
 
-      preds <- results$prediction()
-
-      res <- envModel::get_conf_metrics(truth_vec = preds$truth
-                                        , pred_vec = preds$response
-                                        )
-
     }
+
+    res <- results$score() %>%
+      dplyr::mutate(metrics = map(prediction
+                                  , ~envModel::get_conf_metrics(truth_vec = .$truth
+                                                                , pred_vec = .$response
+                                                                )
+                                  )
+                    ) %>%
+      dplyr::select(iteration, classif.ce, metrics) %>%
+      tidyr::unnest(cols = c(metrics))
 
     res$seconds <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
 

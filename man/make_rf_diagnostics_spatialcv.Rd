@@ -34,7 +34,7 @@ for spatial tiles. Reps will be made using \code{range <- seq(range_min, range_m
 x and y coordinates.}
 
 \item{crs_df}{Coordinate reference system for \code{coords}. Passed to the
-\code{crs} argument of \code{\link[sf:st_as_sf]{sf::st_as_sf()}}}
+\code{crs} argument of \code{\link[sf:st_as_sf]{sf::st_as_sf()}}.}
 
 \item{...}{passed to \code{\link[=make_rf_good]{make_rf_good()}}.}
 

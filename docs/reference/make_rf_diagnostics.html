@@ -122,11 +122,11 @@
   clust_col <span class='op'>=</span> <span class='st'>"cluster"</span>,
   folds <span class='op'>=</span> <span class='fl'>3L</span>,
   reps <span class='op'>=</span> <span class='fl'>5L</span>,
-  range_m <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/integer.html'>as.integer</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span><span class='op'>(</span><span class='fl'>5000L</span>, <span class='fl'>10000L</span>, length.out <span class='op'>=</span> <span class='va'>reps</span><span class='op'>)</span><span class='op'>)</span>,
+  range_m <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/integer.html'>as.integer</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span><span class='op'>(</span><span class='fl'>20000L</span>, <span class='fl'>100000L</span>, length.out <span class='op'>=</span> <span class='va'>reps</span><span class='op'>)</span><span class='op'>)</span>,
   set_min <span class='op'>=</span> <span class='cn'>FALSE</span>,
   mlr3_cv_method <span class='op'>=</span> <span class='st'>"repeated_cv"</span>,
-  x <span class='op'>=</span> <span class='cn'>NULL</span>,
-  y <span class='op'>=</span> <span class='cn'>NULL</span>
+  coords <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"long"</span>, <span class='st'>"lat"</span><span class='op'>)</span>,
+  crs_df <span class='op'>=</span> <span class='fl'>4283</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -167,12 +167,14 @@ than <code>set_min</code> cases will be filtered.</p></td>
 "repeated_cv" or "repeated_spcv_block".</p></td>
     </tr>
     <tr>
-      <th>x</th>
-      <td><p>Character name of column containing x coordinates.</p></td>
+      <th>coords</th>
+      <td><p>Character vector of length 2. Names of columns in <code>env_df</code> with
+x and y coordinates.</p></td>
     </tr>
     <tr>
-      <th>y</th>
-      <td><p>Character name of column containing y coordinates.</p></td>
+      <th>crs_df</th>
+      <td><p>Coordinate reference system for <code>coords</code>. Passed to the
+<code>crs</code> argument of <code><a href='https://r-spatial.github.io/sf/reference/st_as_sf.html'>sf::st_as_sf()</a></code>.</p></td>
     </tr>
     </table>
 

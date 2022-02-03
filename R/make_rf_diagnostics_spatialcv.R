@@ -13,7 +13,7 @@
 #' @param coords Character vector of length 2. Names of columns in `env_df` with
 #' x and y coordinates.
 #' @param crs_df Coordinate reference system for `coords`. Passed to the
-#' `crs` argument of [sf::st_as_sf()]
+#' `crs` argument of [sf::st_as_sf()].
 #' @param crs_analysis. Coordinate reference system for the analysis. Should be
 #' a projected crs so that `range_min` and `range_max` are interpreted
 #' correctly.
@@ -51,7 +51,7 @@ make_rf_diagnostics_spatialcv <- function(env_df
 
   res <- tibble::tibble(fold = 1:folds) %>%
     dplyr::inner_join(tibble::tibble(rep = 1:reps
-                                     , res = range
+                                     , range = range
                                      ) %>%
                         dplyr::mutate(ras = purrr::map(range
                                                 , ~ terra::rast(extent = area
@@ -94,7 +94,7 @@ make_rf_diagnostics_spatialcv <- function(env_df
                   , metrics = purrr::map(rf_good, "metrics")
                   , seconds = purrr::map_dbl(rf_good, "seconds")
                   ) %>%
-    dplyr::select(fold, rep, rf_res, metrics, seconds) %>%
+    dplyr::select(fold, rep, range, rf_res, metrics, seconds) %>%
     tidyr::unnest(cols = c(rf_res)) %>%
     dplyr::select(-rf) %>%
     dplyr::arrange(fold, rep)
