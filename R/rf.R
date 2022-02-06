@@ -244,7 +244,7 @@
 
 
       cat(
-        paste0("ntree: ", rf_good$rf_res$rf[[nrow(rf_good$rf_res)]]$ntree
+        paste0("ntree: ", rf_good$rf_res$ntree[[nrow(rf_good$rf_res)]]
               , "\n counter on: ", counter, " (Stop at ",accept_run,")"
                , "\n kappa: ",round(rf_good$rf_res$kap[[nrow(rf_good$rf_res)]],4)
                , "\n changed predictions: ",paste0(round(100-100*rf_good$rf_res$prev_delta[nrow(rf_good$rf_res)],3),"%")
