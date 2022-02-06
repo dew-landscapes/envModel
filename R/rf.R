@@ -202,7 +202,7 @@
       )
     ) {
 
-      prev_rf <- if(exisits("new_rf")) new_rf else rf
+      prev_rf <- if(exists("new_rf")) new_rf else rf
 
       next_rf <- make_rf_quick(x
                                , y
