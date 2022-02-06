@@ -269,7 +269,7 @@
 
     if(!isTRUE(is.null(out_file))) rio::export(rf_good, out_file)
 
-    stuff <- ls() %>% grep("rf_good", ., value = TRUE, invert = TRUE)
+    stuff <- ls() %>% grep("rf_good|do_gc", ., value = TRUE, invert = TRUE)
 
     rm(list = stuff)
 
