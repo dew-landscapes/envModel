@@ -6,8 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Run random forest, returning only diagnostic values from spatial cross
-validation. — make_rf_diagnostics_spatialcv • envModel</title>
+<title>Generate correlation matrix and select variables to remove — make_env_corr • envModel</title>
 
 
 <!-- jquery -->
@@ -40,9 +39,8 @@ validation. — make_rf_diagnostics_spatialcv • envModel</title>
 
 
 
-<meta property="og:title" content="Run random forest, returning only diagnostic values from spatial cross
-validation. — make_rf_diagnostics_spatialcv" />
-<meta property="og:description" content="Random forest is run via randomForest::randomForest()." />
+<meta property="og:title" content="Generate correlation matrix and select variables to remove — make_env_corr" />
+<meta property="og:description" content="Generate correlation matrix and select variables to remove" />
 
 
 
@@ -110,27 +108,22 @@ validation. — make_rf_diagnostics_spatialcv" />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Run random forest, returning only diagnostic values from spatial cross
-validation.</h1>
-    <small class="dont-index">Source: <a href='https://github.com/Acanthiza/envModel/blob/master/R/make_rf_diagnostics_spatialcv.R'><code>R/make_rf_diagnostics_spatialcv.R</code></a></small>
-    <div class="hidden name"><code>make_rf_diagnostics_spatialcv.Rd</code></div>
+    <h1>Generate correlation matrix and select variables to remove</h1>
+    <small class="dont-index">Source: <a href='https://github.com/Acanthiza/envModel/blob/master/R/make_env_corr.R'><code>R/make_env_corr.R</code></a></small>
+    <div class="hidden name"><code>make_env_corr.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Random forest is run via <code><a href='https://rdrr.io/pkg/randomForest/man/randomForest.html'>randomForest::randomForest()</a></code>.</p>
+    <p>Generate correlation matrix and select variables to remove</p>
     </div>
 
-    <pre class="usage"><span class='fu'>make_rf_diagnostics_spatialcv</span><span class='op'>(</span>
+    <pre class="usage"><span class='fu'>make_env_corr</span><span class='op'>(</span>
   <span class='va'>env_df</span>,
-  clust_col <span class='op'>=</span> <span class='st'>"cluster"</span>,
-  folds <span class='op'>=</span> <span class='fl'>3L</span>,
-  reps <span class='op'>=</span> <span class='fl'>5L</span>,
-  range_min <span class='op'>=</span> <span class='fl'>20000</span>,
-  range_max <span class='op'>=</span> <span class='fl'>1e+05</span>,
-  coords <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"long"</span>, <span class='st'>"lat"</span><span class='op'>)</span>,
-  crs_df <span class='op'>=</span> <span class='fl'>4283</span>,
-  crs_analysis <span class='op'>=</span> <span class='fl'>3577</span>,
-  <span class='va'>...</span>
+  <span class='va'>env_cols</span>,
+  remove <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  thresh <span class='op'>=</span> <span class='fl'>0.95</span>,
+  always_remove <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"lat"</span>, <span class='st'>"long"</span><span class='op'>)</span>,
+  always_keep <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"prec"</span>, <span class='st'>"temp"</span><span class='op'>)</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -138,46 +131,38 @@ validation.</h1>
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>env_df</th>
-      <td><p>Dataframe with clusters and environmental columns.</p></td>
+      <td><p>Dataframe with environmental variables</p></td>
     </tr>
     <tr>
-      <th>clust_col</th>
-      <td><p>Character. Name of column with cluster membership.</p></td>
+      <th>env_cols</th>
+      <td><p>Numeric or character vector defining columns in env_df
+that contain the variables to test for correlation.</p></td>
     </tr>
     <tr>
-      <th>folds</th>
-      <td><p>Numeric. How many folds to use in cross-validation?</p></td>
+      <th>remove</th>
+      <td><p>Logical. Remove variables correlated at or above <code>thresh</code>.
+Correlation is found via <code><a href='https://rdrr.io/pkg/caret/man/findCorrelation.html'>caret::findCorrelation()</a></code>.</p></td>
     </tr>
     <tr>
-      <th>reps</th>
-      <td><p>Numeric. How many repeats of cross-validation?</p></td>
+      <th>thresh</th>
+      <td><p>Numeric. Threshold correlation value before variable is removed.</p></td>
     </tr>
     <tr>
-      <th>range_min, range_max</th>
-      <td><p>Numeric. Metres. Minimum and maximum grid sizes
-for spatial tiles. Reps will be made using <code>range &lt;- seq(range_min, range_max , length.out = reps)</code></p></td>
+      <th>always_remove</th>
+      <td><p>Character vector. Any string in this vector, if matched,
+will always be removed (even if not correlated).</p></td>
     </tr>
     <tr>
-      <th>coords</th>
-      <td><p>Character vector of length 2. Names of columns in <code>env_df</code> with
-x and y coordinates.</p></td>
-    </tr>
-    <tr>
-      <th>crs_df</th>
-      <td><p>Coordinate reference system for <code>coords</code>. Passed to the
-<code>crs</code> argument of <code><a href='https://r-spatial.github.io/sf/reference/st_as_sf.html'>sf::st_as_sf()</a></code>.</p></td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td><p>passed to <code><a href='make_rf_good.html'>make_rf_good()</a></code>.</p></td>
+      <th>always_keep</th>
+      <td><p>Character vector. Any string in this vector, if matched,
+will not be removed (even if correlated).</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    
-
-
+    <p>list with elements
+itemize</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

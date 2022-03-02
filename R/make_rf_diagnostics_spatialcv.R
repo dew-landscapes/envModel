@@ -14,11 +14,6 @@
 #' x and y coordinates.
 #' @param crs_df Coordinate reference system for `coords`. Passed to the
 #' `crs` argument of [sf::st_as_sf()].
-#' @param crs_analysis. Coordinate reference system for the analysis. Should be
-#' a projected crs so that `range_min` and `range_max` are interpreted
-#' correctly.
-#' @param set_min FALSE or numeric. If numeric, classes in `clust_col` with less
-#' than `set_min` cases will be filtered.
 #' @param ... passed to [envModel::make_rf_good()].
 #'
 #' @return

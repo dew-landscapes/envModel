@@ -34,7 +34,7 @@ values are required to ensure the folds are different between repetitions.
 \item{set_min}{FALSE or numeric. If numeric, classes in \code{clust_col} with less
 than \code{set_min} cases will be filtered.}
 
-\item{mlr3_cv_method}{Method to use with \code{\link[mlr3:rmsp]{mlr3::rmsp()}} (as character, e.g.
+\item{mlr3_cv_method}{Method to use with \code{\link[mlr3:mlr_sugar]{mlr3::rsmp()}} (as character, e.g.
 "repeated_cv" or "repeated_spcv_block".}
 
 \item{coords}{Character vector of length 2. Names of columns in \code{env_df} with

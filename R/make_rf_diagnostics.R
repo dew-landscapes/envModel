@@ -14,7 +14,7 @@
 #' `repeated_spcv_block`.
 #' @param set_min FALSE or numeric. If numeric, classes in `clust_col` with less
 #' than `set_min` cases will be filtered.
-#' @param mlr3_cv_method Method to use with [mlr3::rmsp()] (as character, e.g.
+#' @param mlr3_cv_method Method to use with [mlr3::rsmp()] (as character, e.g.
 #' "repeated_cv" or "repeated_spcv_block".
 #' @param coords Character vector of length 2. Names of columns in `env_df` with
 #' x and y coordinates.

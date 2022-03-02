@@ -37,13 +37,6 @@ x and y coordinates.}
 \code{crs} argument of \code{\link[sf:st_as_sf]{sf::st_as_sf()}}.}
 
 \item{...}{passed to \code{\link[=make_rf_good]{make_rf_good()}}.}
-
-\item{crs_analysis.}{Coordinate reference system for the analysis. Should be
-a projected crs so that \code{range_min} and \code{range_max} are interpreted
-correctly.}
-
-\item{set_min}{FALSE or numeric. If numeric, classes in \code{clust_col} with less
-than \code{set_min} cases will be filtered.}
 }
 \value{
 
