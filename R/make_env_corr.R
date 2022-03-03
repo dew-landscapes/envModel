@@ -34,18 +34,21 @@ make_env_corr <- function(env_df
                           , always_keep = c("prec", "temp")
                           ) {
 
-  if(!is.numeric(env_cols)) env_cols <- names(env_df) %in% env_cols
+  if(!is.character(env_cols)) env_cols <- names(env_df)[env_cols]
 
-  res <- list(env_cols = names(env_df)[env_cols]
+  res <- list(env_cols = env_cols
               , always_remove = always_remove
               , always_keep = always_keep
               , thresh = thresh
               , remove = remove
               )
 
-  res$env_corr <- stats::cor(env_df[,env_cols])
+  res$remove_env <- names(env_df[, sapply(env_df, function(v) var(v, na.rm=TRUE)==0)])
 
-  res$remove_env <- colnames(res$env_corr)[colSums(is.na(res$env_corr)) == nrow(res$env_corr) - 1]
+  res$env_corr <- env_df %>%
+    dplyr::select(any_of(env_cols)) %>%
+    dplyr::select(!any_of(res$remove_env)) %>%
+    stats::cor()
 
   res$highly_corr <- caret::findCorrelation(res$env_corr[!rownames(res$env_corr) %in% res$remove_env
                                                          ,!colnames(res$env_corr) %in% res$remove_env
