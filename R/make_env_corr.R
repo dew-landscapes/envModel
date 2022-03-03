@@ -45,7 +45,11 @@ make_env_corr <- function(env_df
 
   res$env_corr <- stats::cor(env_df[,env_cols])
 
-  res$highly_corr <- caret::findCorrelation(res$env_corr
+  res$remove_env <- colnames(res$env_corr)[colSums(is.na(res$env_corr)) == nrow(res$env_corr) - 1]
+
+  res$highly_corr <- caret::findCorrelation(res$env_corr[!rownames(res$env_corr) %in% res$remove_env
+                                                         ,!colnames(res$env_corr) %in% res$remove_env
+                                                         ]
                                            , cutoff = thresh
                                            , names = TRUE
                                            )
@@ -58,11 +62,11 @@ make_env_corr <- function(env_df
            , invert = TRUE
            , value = TRUE
            ) %>%
-      c(., always_remove)
+      c(res$remove_env, ., always_remove)
 
   } else {
 
-    res$remove_env <- always_remove
+    res$remove_env <- c(res$remove_env, always_remove)
 
   }
 
