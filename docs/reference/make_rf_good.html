@@ -133,6 +133,7 @@
   do_imp <span class='op'>=</span> <span class='cn'>FALSE</span>,
   keep_rf <span class='op'>=</span> <span class='cn'>FALSE</span>,
   out_file <span class='op'>=</span> <span class='cn'>NULL</span>,
+  save_res <span class='op'>=</span> <span class='cn'>FALSE</span>,
   do_gc <span class='op'>=</span> <span class='cn'>TRUE</span>
 <span class='op'>)</span></pre>
 
@@ -203,6 +204,12 @@ output. Defaults to <code>FALSE</code> to save memory.</p></td>
     <tr>
       <th>out_file</th>
       <td><p>Optional name of file to save results.</p></td>
+    </tr>
+    <tr>
+      <th>save_res</th>
+      <td><p>FALSE or folder path. If path is provided, any constant
+columns in <code>env_df</code> will be used to generate a file name, with metrics saved
+to folder path and file name.</p></td>
     </tr>
     <tr>
       <th>do_gc</th>

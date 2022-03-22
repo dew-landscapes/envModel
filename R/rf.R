@@ -60,6 +60,9 @@
 #' @param keep_rf Logical. If true, `randomForest` object will be included in
 #' output. Defaults to `FALSE` to save memory.
 #' @param out_file Optional name of file to save results.
+#' @param save_res FALSE or folder path. If path is provided, any constant
+#' columns in `env_df` will be used to generate a file name, with metrics saved
+#' to folder path and file name.
 #' @param do_gc Logical. Run `gc()` when results are available and all other
 #' objects have been removed.
 #'
@@ -82,6 +85,7 @@
                            , do_imp = FALSE
                            , keep_rf = FALSE
                            , out_file = NULL
+                           , save_res = FALSE
                            , do_gc = TRUE
                            ) {
 
@@ -96,184 +100,218 @@
 
     }
 
-    if(!isFALSE(set_min)) {
+    if(!isFALSE(save_res)) {
 
-      env_df <- env_df %>%
-        dplyr::add_count(!!rlang::ensym(clust_col)) %>%
-        dplyr::filter(n > set_min) %>%
-        dplyr::select(-n) %>%
-        dplyr::mutate(!!clust_col := factor(!!rlang::ensym(clust_col)))
+      constant_cols <- env_df %>%
+        purrr::keep(~length(unique(.x)) == 1) %>%
+        dplyr::distinct() %>%
+        dplyr::slice(1) %>%
+        unlist(., use.names=FALSE)
 
-    }
+      res_path <- fs::path(save_res
+                            , paste0(paste0(constant_cols
+                                            , collapse = "_"
+                                            )
+                                     , ".rds"
+                                     )
+                           )
 
-    x <- env_df[,which(names(env_df) %in% env_names)]
-    y <- env_df[clust_col][[1]] %>% factor()
+      } else res_path <- ""
 
-    rf_good <- list()
+    if(file.exists(res_path)) {
 
-    # setup parallel cluster
-    if(rf_cores > 1) {
-
-      cl <- parallel::makePSOCKcluster(rf_cores)
-      doParallel::registerDoParallel(cl)
-
-    }
-
-    if(isTRUE(is.null(use_mtry))) {
-
-      # Training control for caret implementation of machine learning methods
-      ctrl <- caret::trainControl(method = "cv"
-                                  , savePredictions = FALSE
-                                  , verboseIter = FALSE
-                                  , allowParallel = rf_cores > 1
-                                  )
-
-      # Tuning grid
-      c_tune_grid <- expand.grid(.mtry = 1:floor(sqrt(length(env_names))))
-
-      rf_good$mtry <- caret::train(x
-                                      , y
-                                      , method = "rf"
-                                      , trControl = ctrl
-                                      , tuneGrid = c_tune_grid
-                                      , metric = "Kappa"
-                                      , trace = FALSE
-                                      )
-
-      rf_good$mtry <- rf_good$mtry %>%
-        `[[` ("finalModel") %>%
-        `[[` ("mtry")
-
-      } else rf_good$mtry <- use_mtry
-
-
-    get_truth_pred <- function(int_met, rf){
-
-      if(isTRUE(int_met)) {
-
-        truth <- y
-        pred <- rf$predicted
-
+        rf_good <- rio::import(res_path)
 
       } else {
 
-        new_data <- int_met[, env_names]
+      if(!isFALSE(set_min)) {
 
-        truth <- int_met[clust_col][[1]]
-
-        pred <- predict(rf, newdata = new_data)
+        env_df <- env_df %>%
+          dplyr::add_count(!!rlang::ensym(clust_col)) %>%
+          dplyr::filter(n > set_min) %>%
+          dplyr::select(-n) %>%
+          dplyr::mutate(!!clust_col := factor(!!rlang::ensym(clust_col)))
 
       }
 
-      tibble::tibble(truth,pred)
+      x <- env_df[,which(names(env_df) %in% env_names)]
+      y <- env_df[clust_col][[1]] %>% factor()
 
-    }
+      rf_good <- list()
 
-    rf <- make_rf_quick(x
-                        , y
-                        , trees = trees_start
-                        , if(rf_cores > 1) cl_obj = cl
-                        , use_mtry = rf_good$mtry
-                        , do_imp = .do_imp
-                        )
+      # setup parallel cluster
+      if(rf_cores > 1) {
 
-    metrics <- get_conf_metrics(get_truth_pred(internal_metrics
-                                               , rf
-                                               )
-                                )
+        cl <- parallel::makePSOCKcluster(rf_cores)
+        doParallel::registerDoParallel(cl)
 
-    if(keep_rf) rf_good$rf <- rf
+      }
 
-    rf_good$rf_res <- tibble::tibble(trees = trees_start) %>%
-      dplyr::mutate(metrics = list(metrics)
-                    , ntree = rf$ntree
-                    ) %>%
-      tidyr::unnest(cols = c(metrics)) %>%
-      dplyr::mutate(prev_kappa = kap
-                    , prev_delta = kap
-                    )
+      if(isTRUE(is.null(use_mtry))) {
 
-    counter <- 0
+        # Training control for caret implementation of machine learning methods
+        ctrl <- caret::trainControl(method = "cv"
+                                    , savePredictions = FALSE
+                                    , verboseIter = FALSE
+                                    , allowParallel = rf_cores > 1
+                                    )
 
-    while(
-      as.logical(
-        (counter < accept_run) *
-        (rf_good$rf_res$ntree[[nrow(rf_good$rf_res)]] < trees_max)
-      )
-    ) {
+        # Tuning grid
+        c_tune_grid <- expand.grid(.mtry = 1:floor(sqrt(length(env_names))))
 
-      prev_rf <- if(exists("new_rf")) new_rf else rf
+        rf_good$mtry <- caret::train(x
+                                        , y
+                                        , method = "rf"
+                                        , trControl = ctrl
+                                        , tuneGrid = c_tune_grid
+                                        , metric = "Kappa"
+                                        , trace = FALSE
+                                        )
 
-      next_rf <- make_rf_quick(x
-                               , y
-                               , trees = trees_add
-                               , if(rf_cores > 1) cl_obj = cl
-                               , use_mtry = rf_good$mtry
-                              , do_imp = .do_imp
-                               )
+        rf_good$mtry <- rf_good$mtry %>%
+          `[[` ("finalModel") %>%
+          `[[` ("mtry")
 
-      new_rf <- randomForest::combine(prev_rf,next_rf)
+        } else rf_good$mtry <- use_mtry
+
+
+      get_truth_pred <- function(int_met, rf){
+
+        if(isTRUE(int_met)) {
+
+          truth <- y
+          pred <- rf$predicted
+
+
+        } else {
+
+          new_data <- int_met[, env_names]
+
+          truth <- int_met[clust_col][[1]]
+
+          pred <- predict(rf, newdata = new_data)
+
+        }
+
+        tibble::tibble(truth,pred)
+
+      }
+
+      rf <- make_rf_quick(x
+                          , y
+                          , trees = trees_start
+                          , if(rf_cores > 1) cl_obj = cl
+                          , use_mtry = rf_good$mtry
+                          , do_imp = .do_imp
+                          )
 
       metrics <- get_conf_metrics(get_truth_pred(internal_metrics
-                                                  , new_rf
-                                                  )
-                                   )
+                                                 , rf
+                                                 )
+                                  )
 
-      prev_delta <- sum(prev_rf$predicted == new_rf$predicted)/length(y)
+      if(keep_rf) rf_good$rf <- rf
 
-      prev_kappa <- yardstick::kap(tibble::tibble(truth = prev_rf$predicted
-                                         , estimate = new_rf$predicted
-                                         )
-                                  , truth
-                                  , estimate
-                                  )$.estimate
+      rf_good$rf_res <- tibble::tibble(trees = trees_start) %>%
+        dplyr::mutate(metrics = list(metrics)
+                      , ntree = rf$ntree
+                      ) %>%
+        tidyr::unnest(cols = c(metrics)) %>%
+        dplyr::mutate(prev_kappa = kap
+                      , prev_delta = kap
+                      )
 
-      if(keep_rf) rf_good$rf <- new_rf
+      counter <- 0
 
-      rf_good$rf_res <- tibble::tibble(prev_delta = prev_delta
-                                       , prev_kappa = prev_kappa
-                                       , ntree = new_rf$ntree
-                                       ) %>%
-                           dplyr::bind_cols(metrics)
+      while(
+        as.logical(
+          (counter < accept_run) *
+          (rf_good$rf_res$ntree[[nrow(rf_good$rf_res)]] < trees_max)
+        )
+      ) {
 
-      counter <- if(prev_delta >= accept_delta) {
+        prev_rf <- if(exists("new_rf")) new_rf else rf
 
-        counter + 1
+        next_rf <- make_rf_quick(x
+                                 , y
+                                 , trees = trees_add
+                                 , if(rf_cores > 1) cl_obj = cl
+                                 , use_mtry = rf_good$mtry
+                                , do_imp = .do_imp
+                                 )
 
-        } else 0
+        new_rf <- randomForest::combine(prev_rf,next_rf)
+
+        metrics <- get_conf_metrics(get_truth_pred(internal_metrics
+                                                    , new_rf
+                                                    )
+                                     )
+
+        prev_delta <- sum(prev_rf$predicted == new_rf$predicted)/length(y)
+
+        prev_kappa <- yardstick::kap(tibble::tibble(truth = prev_rf$predicted
+                                           , estimate = new_rf$predicted
+                                           )
+                                    , truth
+                                    , estimate
+                                    )$.estimate
+
+        if(keep_rf) rf_good$rf <- new_rf
+
+        rf_good$rf_res <- tibble::tibble(prev_delta = prev_delta
+                                         , prev_kappa = prev_kappa
+                                         , ntree = new_rf$ntree
+                                         ) %>%
+                             dplyr::bind_cols(metrics)
+
+        counter <- if(prev_delta >= accept_delta) {
+
+          counter + 1
+
+          } else 0
 
 
-      cat(
-        paste0("ntree: ", rf_good$rf_res$ntree[[nrow(rf_good$rf_res)]]
-              , "\n counter on: ", counter, " (Stop at ",accept_run,")"
-               , "\n kappa: ",round(rf_good$rf_res$kap[[nrow(rf_good$rf_res)]],4)
-               , "\n changed predictions: ",paste0(round(100-100*rf_good$rf_res$prev_delta[nrow(rf_good$rf_res)],3),"%")
-               , "\n kappa based on confusion with last run: ", round(rf_good$rf_res$prev_kappa[[nrow(rf_good$rf_res)]],4)
-               , "\n elapsed time: ", as.numeric(round(difftime(Sys.time(), go_time, units = "secs"),2)), " seconds\n\n"
-               )
-      )
+        cat(
+          paste0("ntree: ", rf_good$rf_res$ntree[[nrow(rf_good$rf_res)]]
+                , "\n counter on: ", counter, " (Stop at ",accept_run,")"
+                 , "\n kappa: ",round(rf_good$rf_res$kap[[nrow(rf_good$rf_res)]],4)
+                 , "\n changed predictions: ",paste0(round(100-100*rf_good$rf_res$prev_delta[nrow(rf_good$rf_res)],3),"%")
+                 , "\n kappa based on confusion with last run: ", round(rf_good$rf_res$prev_kappa[[nrow(rf_good$rf_res)]],4)
+                 , "\n elapsed time: ", as.numeric(round(difftime(Sys.time(), go_time, units = "secs"),2)), " seconds\n\n"
+                 )
+        )
 
-    }
+      }
 
-    # stop parallel cluster
-    if(rf_cores > 1) {
+      # stop parallel cluster
+      if(rf_cores > 1) {
 
-      parallel::stopCluster(cl)
-      rm(cl)
+        parallel::stopCluster(cl)
+        rm(cl)
 
-    }
+      }
 
-    rf_good$metrics <- if(isTRUE(internal_metrics)) "internal" else "test data"
+      rf_good$metrics <- if(isTRUE(internal_metrics)) "internal" else "test data"
 
-    rf_good$seconds <- round(as.numeric(difftime(Sys.time(), go_time, units = "secs")),2)
+      rf_good$seconds <- round(as.numeric(difftime(Sys.time(), go_time, units = "secs")),2)
 
-    if(!isTRUE(is.null(out_file))) rio::export(rf_good, out_file)
+      if(!isTRUE(is.null(out_file))) rio::export(rf_good, out_file)
 
-    stuff <- ls() %>% grep("rf_good|do_gc", ., value = TRUE, invert = TRUE)
+      if(res_path != "") {
 
-    rm(list = stuff)
+        rio::export(rf_good
+                    , file = res_path
+                    )
 
-    if(do_gc) gc()
+      }
+
+      stuff <- ls() %>% grep("rf_good|do_gc", ., value = TRUE, invert = TRUE)
+
+      rm(list = stuff)
+
+      if(do_gc) gc()
+
+      }
 
     return(rf_good)
 

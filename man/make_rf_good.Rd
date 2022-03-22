@@ -20,6 +20,7 @@ make_rf_good(
   do_imp = FALSE,
   keep_rf = FALSE,
   out_file = NULL,
+  save_res = FALSE,
   do_gc = TRUE
 )
 }
@@ -58,6 +59,10 @@ with a tune grid of \verb{.mtry = 1:floor(sqrt(length(env_names))}.}
 output. Defaults to \code{FALSE} to save memory.}
 
 \item{out_file}{Optional name of file to save results.}
+
+\item{save_res}{FALSE or folder path. If path is provided, any constant
+columns in \code{env_df} will be used to generate a file name, with metrics saved
+to folder path and file name.}
 
 \item{do_gc}{Logical. Run \code{gc()} when results are available and all other
 objects have been removed.}
