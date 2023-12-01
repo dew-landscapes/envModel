@@ -38,9 +38,6 @@ x and y coordinates.}
 
 \item{...}{passed to \code{\link[=make_rf_good]{make_rf_good()}}.}
 }
-\value{
-
-}
 \description{
 Random forest is run via \code{\link[randomForest:randomForest]{randomForest::randomForest()}}.
 }

@@ -43,9 +43,6 @@ x and y coordinates.}
 \item{crs_df}{Coordinate reference system for \code{coords}. Passed to the
 \code{crs} argument of \code{\link[sf:st_as_sf]{sf::st_as_sf()}}.}
 }
-\value{
-
-}
 \description{
 Run random forest, returning only diagnostic values.
 }

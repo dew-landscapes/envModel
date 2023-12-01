@@ -46,30 +46,33 @@ make_env_corr <- function(env_df
   res$remove_env <- names(env_df[, sapply(env_df, function(v) var(v, na.rm=TRUE)==0)])
 
   res$env_corr <- env_df %>%
-    dplyr::select(any_of(env_cols)) %>%
-    dplyr::select(!any_of(res$remove_env)) %>%
-    stats::cor()
+    dplyr::select(tidyselect::any_of(env_cols)) %>%
+    dplyr::select(!tidyselect::any_of(res$remove_env)) %>%
+    stats::cor(use = "complete.obs")
 
-  res$highly_corr <- caret::findCorrelation(res$env_corr[!rownames(res$env_corr) %in% res$remove_env
-                                                         ,!colnames(res$env_corr) %in% res$remove_env
-                                                         ]
-                                           , cutoff = thresh
-                                           , names = TRUE
-                                           )
+  if(dim(res$env_corr)[2]) {
 
-  if(remove) {
+    res$highly_corr <- caret::findCorrelation(res$env_corr[!rownames(res$env_corr) %in% res$remove_env
+                                                           ,!colnames(res$env_corr) %in% res$remove_env
+                                                           ]
+                                             , cutoff = thresh
+                                             , names = TRUE
+                                             )
 
-    res$remove_env <- res$highly_corr %>%
-      grep(paste0(always_keep, collapse = "|")
-           , .
-           , invert = TRUE
-           , value = TRUE
-           ) %>%
-      c(res$remove_env, ., always_remove)
+    if(remove) {
 
-  } else {
+      res$remove_env <- res$highly_corr %>%
+        c(res$remove_env, ., always_remove)
 
-    res$remove_env <- c(res$remove_env, always_remove)
+      res$remove_env <- res$remove_env[!res$remove_env %in% always_keep]
+
+      res$remove_env <- sort(unique(res$remove_env))
+
+    } else {
+
+      res$remove_env <- c(res$remove_env, always_remove)
+
+    }
 
   }
 

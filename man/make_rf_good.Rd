@@ -67,9 +67,6 @@ to folder path and file name.}
 \item{do_gc}{Logical. Run \code{gc()} when results are available and all other
 objects have been removed.}
 }
-\value{
-
-}
 \description{
 Iteratively add trees to random forest until predictions stabilise
 }
