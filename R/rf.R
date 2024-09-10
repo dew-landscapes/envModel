@@ -247,7 +247,8 @@
                                  , trees = trees_add
                                  , if(rf_cores > 1) cl_obj = cl
                                  , use_mtry = rf_good$mtry
-                                , do_imp = .do_imp
+                                 , do_imp = .do_imp
+                                 , ...
                                  )
 
         new_rf <- randomForest::combine(prev_rf,next_rf)
