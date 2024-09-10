@@ -7,6 +7,9 @@
 #' @param clust_col Character. Name of column with cluster membership.
 #' @param folds Numeric. How many folds to use in cross-validation?
 #' @param reps Numeric. How many repeats of cross-validation?
+#' @param down_sample Logical. If TRUE, the `sample.fraction` argument to
+#' `ranger::ranger()` is set to the minimum number of sites in any one cluster
+#' divided by the total number of sites.
 #' @param range_m Numeric. The distance in metres (regardless of the unit
 #' of the reference system of the input data) for block size(s) if using
 #' [blockCV::spatialBlock()]. If reps > 1, an equivalent number of range_m
@@ -29,6 +32,7 @@
                            , clust_col = "cluster"
                            , folds = 3L
                            , reps = 5L
+                           , down_sample = TRUE
                            , range_m = as.integer(seq(20000L, 100000L, length.out = reps))
                            , set_min = FALSE
                            , mlr3_cv_method = "repeated_cv"
@@ -65,8 +69,18 @@
       task$col_roles$stratum <- clust_col
 
       # learner
+      samp_prop <- if(down_sample) {
+
+        min(table(env_df_use[[clust_col]])) / nrow(env_df_use)
+
+      } else {
+
+        1 # sample.fraction = ifelse(replace, 1, 0.632) are the ranger::ranger defaults (and default replace = TRUE)
+
+      }
+
       learner <- mlr3::lrn("classif.ranger"
-                           , sample.fraction = min(table(env_df_use[[clust_col]])) / nrow(env_df_use)
+                           , sample.fraction = samp_prop
                            )
 
       # resampling
