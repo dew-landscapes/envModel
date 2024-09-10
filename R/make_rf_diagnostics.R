@@ -65,7 +65,9 @@
       task$col_roles$stratum <- clust_col
 
       # learner
-      learner <- mlr3::lrn("classif.ranger")
+      learner <- mlr3::lrn("classif.ranger"
+                           , sample.fraction = min(table(env_df_use[[clust_col]])) / nrow(env_df_use)
+                           )
 
       # resampling
       re <- mlr3::rsmp(mlr3_cv_method
