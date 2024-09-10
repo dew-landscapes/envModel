@@ -54,6 +54,16 @@
 
     } else env_df
 
+    samp_prop <- if(down_sample) {
+
+        min(table(env_df_use[[clust_col]])) / nrow(env_df_use)
+
+      } else {
+
+        1 # sample.fraction = ifelse(replace, 1, 0.632) are the ranger::ranger defaults (and default replace = TRUE)
+
+      }
+
     start_time <- Sys.time()
 
     if(!grepl("spcv|sptcv", mlr3_cv_method)) {
@@ -69,16 +79,6 @@
       task$col_roles$stratum <- clust_col
 
       # learner
-      samp_prop <- if(down_sample) {
-
-        min(table(env_df_use[[clust_col]])) / nrow(env_df_use)
-
-      } else {
-
-        1 # sample.fraction = ifelse(replace, 1, 0.632) are the ranger::ranger defaults (and default replace = TRUE)
-
-      }
-
       learner <- mlr3::lrn("classif.ranger"
                            , sample.fraction = samp_prop
                            )
@@ -114,7 +114,10 @@
       task$col_roles$stratum <- clust_col
 
       # learner
-      learner <- mlr3::lrn("classif.ranger")
+      learner <- mlr3::lrn("classif.ranger"
+                           , sample.fraction = samp_prop
+                           , mtry = to_tune(1, 10)
+                           )
 
       # spatial resampling
       re <- mlr3::rsmp(mlr3_cv_method
