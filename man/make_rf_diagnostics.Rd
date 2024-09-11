@@ -9,6 +9,7 @@ make_rf_diagnostics(
   clust_col = "cluster",
   folds = 3L,
   reps = 5L,
+  down_sample = TRUE,
   range_m = as.integer(seq(20000L, 100000L, length.out = reps)),
   set_min = FALSE,
   mlr3_cv_method = "repeated_cv",
@@ -24,6 +25,10 @@ make_rf_diagnostics(
 \item{folds}{Numeric. How many folds to use in cross-validation?}
 
 \item{reps}{Numeric. How many repeats of cross-validation?}
+
+\item{down_sample}{Logical. If TRUE, the \code{sample.fraction} argument to
+\code{ranger::ranger()} is set to the minimum number of sites in any one cluster
+divided by the total number of sites.}
 
 \item{range_m}{Numeric. The distance in metres (regardless of the unit
 of the reference system of the input data) for block size(s) if using
