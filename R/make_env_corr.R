@@ -43,7 +43,7 @@ make_env_corr <- function(env_df
               , remove = remove
               )
 
-  res$remove_env <- names(env_df[, sapply(env_df, function(v) var(v, na.rm=TRUE)==0)])
+  res$remove_env <- names(env_df[sapply(env_df, function(v) var(v, na.rm=TRUE)==0)])
 
   res$env_corr <- env_df %>%
     dplyr::select(tidyselect::any_of(env_cols)) %>%
