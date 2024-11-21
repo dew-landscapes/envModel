@@ -8,6 +8,7 @@ reduce_env(
   env_df,
   env_cols,
   y_col = NULL,
+  y_col_factor = TRUE,
   remove = TRUE,
   thresh = 0.95,
   remove_always = c("lat", "long"),
@@ -24,6 +25,10 @@ that contain the variables to test for correlation. Correlation is found via
 \item{y_col}{Character. Name of a column in \code{env_df} to test for
 'important' variables.}
 
+\item{y_col_factor}{Logical. Should \code{y_col} be considered a
+factor in \code{randomForest::randomForest()}? Thus classification rather than
+regression.}
+
 \item{thresh}{Numeric. Threshold correlation value above which a variable
 is flagged as correlated.}
 
@@ -32,10 +37,6 @@ not correlated).}
 
 \item{keep_always}{Character vector. Any string in this vector, if matched,
 will not be removed (even if correlated).}
-
-\item{y_col_factor}{Logical. Should \code{y_col} be considered a
-factor in \code{randomForest::randomForest()}? Thus classification rather than
-regression.}
 }
 \value{
 list with elements
