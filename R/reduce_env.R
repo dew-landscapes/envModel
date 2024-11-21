@@ -38,7 +38,7 @@
 #' @export
 #'
 #' @examples
-make_env_corr <- function(env_df
+reduce_env <- function(env_df
                           , env_cols
                           , y_col = NULL
                           , remove = TRUE

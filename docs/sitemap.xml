@@ -1,39 +1,15 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://acanthiza.github.io/envModel/404.html</loc>
-  </url>
-  <url>
-    <loc>https://acanthiza.github.io/envModel/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://acanthiza.github.io/envModel/index.html</loc>
-  </url>
-  <url>
-    <loc>https://acanthiza.github.io/envModel/reference/get_conf_metrics.html</loc>
-  </url>
-  <url>
-    <loc>https://acanthiza.github.io/envModel/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://acanthiza.github.io/envModel/reference/make_env_clust_df.html</loc>
-  </url>
-  <url>
-    <loc>https://acanthiza.github.io/envModel/reference/make_env_corr.html</loc>
-  </url>
-  <url>
-    <loc>https://acanthiza.github.io/envModel/reference/make_rf_diagnostics.html</loc>
-  </url>
-  <url>
-    <loc>https://acanthiza.github.io/envModel/reference/make_rf_diagnostics_old.html</loc>
-  </url>
-  <url>
-    <loc>https://acanthiza.github.io/envModel/reference/make_rf_diagnostics_spatialcv.html</loc>
-  </url>
-  <url>
-    <loc>https://acanthiza.github.io/envModel/reference/make_rf_good.html</loc>
-  </url>
-  <url>
-    <loc>https://acanthiza.github.io/envModel/reference/pipe.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://acanthiza.github.io/envModel/404.html</loc></url>
+<url><loc>https://acanthiza.github.io/envModel/authors.html</loc></url>
+<url><loc>https://acanthiza.github.io/envModel/index.html</loc></url>
+<url><loc>https://acanthiza.github.io/envModel/reference/get_conf_metrics.html</loc></url>
+<url><loc>https://acanthiza.github.io/envModel/reference/index.html</loc></url>
+<url><loc>https://acanthiza.github.io/envModel/reference/make_env_clust_df.html</loc></url>
+<url><loc>https://acanthiza.github.io/envModel/reference/make_env_corr.html</loc></url>
+<url><loc>https://acanthiza.github.io/envModel/reference/make_rf_diagnostics.html</loc></url>
+<url><loc>https://acanthiza.github.io/envModel/reference/make_rf_diagnostics_old.html</loc></url>
+<url><loc>https://acanthiza.github.io/envModel/reference/make_rf_diagnostics_spatialcv.html</loc></url>
+<url><loc>https://acanthiza.github.io/envModel/reference/make_rf_good.html</loc></url>
+<url><loc>https://acanthiza.github.io/envModel/reference/pipe.html</loc></url>
 </urlset>
+
