@@ -39,13 +39,14 @@
 #'
 #' @examples
 reduce_env <- function(env_df
-                          , env_cols
-                          , y_col = NULL
-                          , remove = TRUE
-                          , thresh = 0.95
-                          , remove_always = c("lat", "long")
-                          , keep_always = c("rain", "tavg")
-                          ) {
+                       , env_cols
+                       , y_col = NULL
+                       , y_col_factor = TRUE
+                       , remove = TRUE
+                       , thresh = 0.95
+                       , remove_always = c("lat", "long")
+                       , keep_always = c("rain", "tavg")
+                       ) {
 
   if(!is.character(env_cols)) env_cols <- names(env_df)[env_cols]
 
