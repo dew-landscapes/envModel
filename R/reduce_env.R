@@ -42,7 +42,6 @@ reduce_env <- function(env_df
                        , env_cols
                        , y_col = NULL
                        , y_col_factor = TRUE
-                       , remove = TRUE
                        , thresh = 0.95
                        , remove_always = c("lat", "long")
                        , keep_always = c("rain", "tavg")
@@ -105,7 +104,7 @@ reduce_env <- function(env_df
     res$rf_imp <- randomForest::importance(res$rf) %>%
       tibble::as_tibble(rownames = "env") %>%
       dplyr::arrange(MeanDecreaseAccuracy) %>%
-      dplyr::mutate(imp = MeanDecreaseAccuracy > quantile(MeanDecreaseAccuracy, probs = 1 - thresh))
+      dplyr::mutate(imp = MeanDecreaseAccuracy > stats::quantile(MeanDecreaseAccuracy, probs = 1 - thresh))
 
     res$remove_rf <- res$rf_imp %>% dplyr::filter(!imp) %>% dplyr::pull(env)
 
