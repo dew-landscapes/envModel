@@ -113,7 +113,7 @@ reduce_env <- function(env_df
   # remove
   res$remove <- c(res$remove_corr, res$remove_constant, res$remove_rf, remove_always)
 
-  res$remove <- res$remove[!res$remove %in% keep_always]
+  res$remove <- res$remove[!grepl(paste0(keep_always, collapse = "|"), res$remove)]
 
   res$remove <- sort(unique(res$remove))
 
