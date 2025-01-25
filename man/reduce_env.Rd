@@ -9,10 +9,10 @@ reduce_env(
   env_cols,
   y_col = NULL,
   y_col_factor = TRUE,
-  remove = TRUE,
+  imp_col = "1",
   thresh = 0.95,
   remove_always = c("lat", "long"),
-  keep_always = c("rain", "tavg")
+  keep_always = NULL
 )
 }
 \arguments{
@@ -28,6 +28,9 @@ that contain the variables to test for correlation. Correlation is found via
 \item{y_col_factor}{Logical. Should \code{y_col} be considered a
 factor in \code{randomForest::randomForest()}? Thus classification rather than
 regression.}
+
+\item{imp_col}{Character. Name of column in result of call to
+\code{randomForest::importance()} to use in deciding 'importance' of a variable.}
 
 \item{thresh}{Numeric. Threshold correlation value above which a variable
 is flagged as correlated.}
