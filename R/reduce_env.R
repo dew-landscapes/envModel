@@ -13,6 +13,8 @@
 #' @param y_col_factor Logical. Should `y_col` be considered a
 #' factor in `randomForest::randomForest()`? Thus classification rather than
 #' regression.
+#' @param imp_col Character. Name of column in result of call to
+#' `randomForest::importance()` to use in deciding 'importance' of a variable.
 #' @param thresh Numeric. Threshold correlation value above which a variable
 #' is flagged as correlated.
 #' @param remove_always Character. Any matches will always be removed (even if
@@ -42,16 +44,17 @@ reduce_env <- function(env_df
                        , env_cols
                        , y_col = NULL
                        , y_col_factor = TRUE
+                       , imp_col = "1"
                        , thresh = 0.95
                        , remove_always = c("lat", "long")
-                       , keep_always = c("rain", "tavg")
+                       , keep_always = NULL
                        ) {
 
   if(!is.character(env_cols)) env_cols <- names(env_df)[env_cols]
 
   res <- list(env_cols = env_cols
               , remove_always = remove_always
-              , keep_always = keep_always
+              , keep_always = if(!is.null(keep_always)) keep_always else NULL
               , thresh = thresh
               )
 
@@ -76,7 +79,7 @@ reduce_env <- function(env_df
   if(!is.null(y_col)) {
 
     rf_dat <- env_df %>%
-      dplyr::select(!tidyselect::any_of(res$remove_constant))
+      dplyr::select(!tidyselect::any_of(c(res$remove_constant, res$remove_corr)))
 
     y <- rf_dat %>%
       dplyr::pull(!!rlang::ensym(y_col)) %>%
@@ -96,15 +99,14 @@ reduce_env <- function(env_df
       , y = y
       , strata = y
       , ntree = trees
-      , mtry = 1
       , importance = TRUE
       , sampsize = rep(min_class, classes)
       )
 
     res$rf_imp <- randomForest::importance(res$rf) %>%
       tibble::as_tibble(rownames = "env") %>%
-      dplyr::arrange(MeanDecreaseAccuracy) %>%
-      dplyr::mutate(imp = MeanDecreaseAccuracy > stats::quantile(MeanDecreaseAccuracy, probs = 1 - thresh))
+      dplyr::arrange(!!rlang::ensym(imp_col)) %>%
+      dplyr::mutate(imp = !!rlang::ensym(imp_col) > stats::quantile(!!rlang::ensym(imp_col), probs = 1 - thresh))
 
     res$remove_rf <- res$rf_imp %>% dplyr::filter(!imp) %>% dplyr::pull(env)
 
@@ -113,7 +115,11 @@ reduce_env <- function(env_df
   # remove
   res$remove <- c(res$remove_corr, res$remove_constant, res$remove_rf, remove_always)
 
-  res$remove <- res$remove[!grepl(paste0(keep_always, collapse = "|"), res$remove)]
+  if(!is.null(keep_always)) {
+
+    res$remove <- res$remove[!grepl(paste0(keep_always, collapse = "|"), res$remove)]
+
+  }
 
   res$remove <- sort(unique(res$remove))
 
