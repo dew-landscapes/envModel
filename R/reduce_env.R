@@ -58,8 +58,10 @@ reduce_env <- function(env_df
               , thresh = thresh
               )
 
+  # const -------
   res$remove_constant <- names(env_df[sapply(env_df, function(v) var(v, na.rm=TRUE)==0)])
 
+  # corr -------
   res$env_corr <- env_df %>%
     dplyr::select(tidyselect::any_of(env_cols)) %>%
     dplyr::select(!tidyselect::any_of(res$remove_constant)) %>%
@@ -76,6 +78,7 @@ reduce_env <- function(env_df
 
   }
 
+  # rf -------
   if(!is.null(y_col)) {
 
     rf_dat <- env_df %>%
@@ -92,27 +95,26 @@ reduce_env <- function(env_df
     tab <- table(y)
     min_class <- min(tab)
     classes <- length(tab)
-    trees <- 30 * ncol(x)
 
     res$rf <- randomForest::randomForest(
       x = x
       , y = y
       , strata = y
-      , ntree = trees
       , importance = TRUE
       , sampsize = rep(min_class, classes)
       )
 
     res$rf_imp <- randomForest::importance(res$rf) %>%
       tibble::as_tibble(rownames = "env") %>%
-      dplyr::arrange(!!rlang::ensym(imp_col)) %>%
-      dplyr::mutate(imp = !!rlang::ensym(imp_col) > stats::quantile(!!rlang::ensym(imp_col), probs = 1 - thresh))
+      dplyr::arrange(!!rlang::ensym(imp_col))
+
+    res$rf_imp["imp"] <- res$rf_imp[imp_col] > stats::quantile(res$rf_imp[[imp_col]], probs = 1 - thresh)
 
     res$remove_rf <- res$rf_imp %>% dplyr::filter(!imp) %>% dplyr::pull(env)
 
   }
 
-  # remove
+  # remove-------
   res$remove <- c(res$remove_corr, res$remove_constant, res$remove_rf, remove_always)
 
   if(!is.null(keep_always)) {
@@ -123,6 +125,7 @@ reduce_env <- function(env_df
 
   res$remove <- sort(unique(res$remove))
 
+  # keep -------
   res$keep <- res$env_cols[! res$env_cols %in% res$remove]
 
   return(res)
