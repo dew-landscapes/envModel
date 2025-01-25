@@ -108,7 +108,7 @@ reduce_env <- function(env_df
       tibble::as_tibble(rownames = "env") %>%
       dplyr::arrange(!!rlang::ensym(imp_col))
 
-    res$rf_imp["imp"] <- res$rf_imp[imp_col] > stats::quantile(res$rf_imp[[imp_col]], probs = 1 - thresh)
+    res$rf_imp["imp"] <- res$rf_imp[[imp_col]] > stats::quantile(res$rf_imp[[imp_col]], probs = 1 - thresh)
 
     res$remove_rf <- res$rf_imp %>% dplyr::filter(!imp) %>% dplyr::pull(env)
 
