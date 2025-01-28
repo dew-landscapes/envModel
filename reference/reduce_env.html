@@ -20,7 +20,7 @@ optionally, important variables as precursor to further analysis."></head><body>
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/Acanthiza/envModel/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/dew-landscapes/envModel/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul></div>
 
 
@@ -30,7 +30,7 @@ optionally, important variables as precursor to further analysis."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Reduce number of environmental variables</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Acanthiza/envModel/blob/main/R/reduce_env.R" class="external-link"><code>R/reduce_env.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/dew-landscapes/envModel/blob/main/R/reduce_env.R" class="external-link"><code>R/reduce_env.R</code></a></small>
       <div class="d-none name"><code>reduce_env.Rd</code></div>
     </div>
 
@@ -104,6 +104,67 @@ will not be removed (even if correlated).</p></dd>
 itemize</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># env variables, presence and background points code from:</span></span></span>
+<span class="r-in"><span><span class="co"># https://rspatial.org/sdm/3_sdm_absence-background.html#absence-and-background-points</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># setup</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/sdm/" class="external-link">predicts</a></span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in library(predicts):</span> there is no package called ‘predicts’</span>
+<span class="r-in"><span><span class="va">f</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"ex/bio.tif"</span>, package<span class="op">=</span><span class="st">"predicts"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># env variables</span></span></span>
+<span class="r-in"><span><span class="va">predictors</span> <span class="op">&lt;-</span> <span class="fu">rast</span><span class="op">(</span><span class="va">f</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rast(f):</span> could not find function "rast"</span>
+<span class="r-in"><span><span class="va">predictors</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'predictors' not found</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># presences</span></span></span>
+<span class="r-in"><span><span class="va">file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span>package<span class="op">=</span><span class="st">"predicts"</span><span class="op">)</span>, <span class="st">"/ex/bradypus.csv"</span>, sep<span class="op">=</span><span class="st">""</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">bradypus</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span><span class="va">file</span>,  header<span class="op">=</span><span class="cn">TRUE</span>,  sep<span class="op">=</span><span class="st">','</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>cannot open file '/ex/bradypus.csv': No such file or directory</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in file(file, "rt"):</span> cannot open the connection</span>
+<span class="r-in"><span><span class="va">presvals</span> <span class="op">&lt;-</span> <span class="fu">extract</span><span class="op">(</span><span class="va">predictors</span>, <span class="va">bradypus</span><span class="op">[</span>,<span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in extract(predictors, bradypus[, -1]):</span> could not find function "extract"</span>
+<span class="r-in"><span><span class="va">presvals</span><span class="op">$</span><span class="va">pa</span> <span class="op">&lt;-</span> <span class="fl">1</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'presvals' not found</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># backgrounds</span></span></span>
+<span class="r-in"><span><span class="va">backgr</span> <span class="op">&lt;-</span> <span class="fu">spatSample</span><span class="op">(</span><span class="va">predictors</span>, <span class="fl">500</span>, <span class="st">"random"</span>, as.points<span class="op">=</span><span class="cn">TRUE</span>, na.rm<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in spatSample(predictors, 500, "random", as.points = TRUE, na.rm = TRUE):</span> could not find function "spatSample"</span>
+<span class="r-in"><span><span class="va">absvals</span> <span class="op">&lt;-</span> <span class="fu">values</span><span class="op">(</span><span class="va">backgr</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in values(backgr):</span> could not find function "values"</span>
+<span class="r-in"><span><span class="va">absvals</span><span class="op">$</span><span class="va">pa</span> <span class="op">&lt;-</span> <span class="fl">0</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'absvals' not found</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># presences + background</span></span></span>
+<span class="r-in"><span><span class="va">pb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">presvals</span>, <span class="va">absvals</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'presvals' not found</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># find correlated and 'unimportant' variables</span></span></span>
+<span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">reduce_env</span><span class="op">(</span><span class="va">pb</span></span></span>
+<span class="r-in"><span>                  , env_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">predictors</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                  , y_col <span class="op">=</span> <span class="st">"pa"</span></span></span>
+<span class="r-in"><span>                  , imp_col <span class="op">=</span> <span class="st">"1"</span></span></span>
+<span class="r-in"><span>                  , thresh <span class="op">=</span> <span class="fl">0.9</span></span></span>
+<span class="r-in"><span>                  <span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'predictors' not found</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'result' not found</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">result</span><span class="op">$</span><span class="va">remove_corr</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'result' not found</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">result</span><span class="op">$</span><span class="va">remove_rf</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'result' not found</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">result</span><span class="op">$</span><span class="va">keep</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'result' not found</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 
