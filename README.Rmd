@@ -1,0 +1,81 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+
+  library(magrittr)
+
+```
+
+# `envModel`: Model floristic clusters as a function of environmental variables
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of `envModel` is to help prepare data and run models (currently only random forest) to predict group membership as a function of environmental variables. Reduce correlated and 'unimportant' environmental variables, run quick random forest runs over many clusterings outputting only confusion matrix, then choose an area of clustering space for a 'good' model and run random forest, iteratively adding trees until results stabilise between iterations.
+
+## Installation
+
+`envModel` is not on [CRAN](https://CRAN.R-project.org).
+
+You can install the development version from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("dew-landscapes/envModel")
+```
+
+## Contents of `envModel`
+
+The following functions and data sets are provided in `envModel`. 
+
+```{r, echo = FALSE, warning = FALSE}
+
+  get_name_title <- function(text) {
+    
+    tibble::enframe(text
+                    , name = NULL
+                    , value = "description"
+                    ) %>%
+      dplyr::filter(grepl("title", description)) %>%
+      dplyr::mutate(description = gsub("\\\\|title", "", description)
+                    , description = gsub("^\\{|\\}$", "", description)
+                    )
+    
+  }
+
+  manuals <- fs::dir_info("man") %>%
+    dplyr::select(path) %>%
+    dplyr::filter(grepl("Rd$", path)
+                  , !grepl("pipe", path)
+                  ) %>%
+    dplyr::mutate(object = gsub("man\\/|\\.Rd","",path)
+                  , class = purrr::map_chr(object, ~envFunc::vec_to_sentence(class(get(.))))
+                  , text = purrr::map(path, readLines)
+                  , text = purrr::map(text, get_name_title)
+                  , object = paste0("envModel::"
+                                    , object
+                                    , ""
+                                    )
+                  , object = dplyr::if_else(class == "function"
+                                            , paste0(object
+                                                     , "()"
+                                                     )
+                                            , object
+                                            )
+                  , object = paste0("`", object, "`")
+                  ) %>%
+    tidyr::unnest(cols = c(text))
+
+  knitr::kable(manuals[,2:4])
+
+```
