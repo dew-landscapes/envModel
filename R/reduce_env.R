@@ -39,7 +39,7 @@
 #' }
 #' @export
 #'
-#' @examples
+#' @example inst/examples/reduce_env_ex.R
 reduce_env <- function(env_df
                        , env_cols
                        , y_col = NULL
@@ -106,9 +106,10 @@ reduce_env <- function(env_df
 
     res$rf_imp <- randomForest::importance(res$rf) %>%
       tibble::as_tibble(rownames = "env") %>%
-      dplyr::arrange(!!rlang::ensym(imp_col))
-
-    res$rf_imp["imp"] <- res$rf_imp[[imp_col]] > stats::quantile(res$rf_imp[[imp_col]], probs = 1 - thresh)
+      dplyr::arrange(!!rlang::ensym(imp_col)) %>%
+      dplyr::mutate(imp = !!rlang::ensym(imp_col)
+                    , imp = imp > stats::quantile(imp, probs = (1 - thresh))
+                    )
 
     res$remove_rf <- res$rf_imp %>% dplyr::filter(!imp) %>% dplyr::pull(env)
 
