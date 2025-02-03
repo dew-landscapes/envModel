@@ -59,7 +59,13 @@ reduce_env <- function(env_df
               )
 
   # const -------
-  res$remove_constant <- names(env_df[sapply(env_df, function(v) var(v, na.rm=TRUE)==0)])
+  env_df_no_factor <- env_df %>%
+     dplyr::mutate(dplyr::across(dplyr::where(is.factor)
+                                 , as.numeric
+                                 )
+                   )
+
+  res$remove_constant <- names(env_df_no_factor[sapply(env_df_no_factor, function(v) var(v, na.rm=TRUE)==0)])
 
   # corr -------
   res$env_corr <- env_df %>%
