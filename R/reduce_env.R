@@ -9,7 +9,8 @@
 #' that contain the variables to test for correlation. Correlation is found via
 #' [caret::findCorrelation()].
 #' @param y_col Character. Name of a column in `env_df` to test for
-#' 'important' variables.
+#' 'important' variables via `randomForest::randomForest()`. Set as `NULL` to
+#' not check for importance.
 #' @param y_col_factor Logical. Should `y_col` be considered a
 #' factor in `randomForest::randomForest()`? Thus classification rather than
 #' regression.
@@ -67,28 +68,11 @@ reduce_env <- function(env_df
 
   res$remove_constant <- names(env_df_no_factor[sapply(env_df_no_factor, function(v) var(v, na.rm=TRUE)==0)])
 
-  # corr -------
-  res$env_corr <- env_df %>%
-    dplyr::select(tidyselect::any_of(env_cols)) %>%
-    dplyr::select(!tidyselect::any_of(res$remove_constant)) %>%
-    stats::cor(use = "complete.obs")
-
-  if(dim(res$env_corr)[2]) {
-
-    res$remove_corr <- caret::findCorrelation(res$env_corr[!rownames(res$env_corr) %in% res$remove_constant
-                                                           ,!colnames(res$env_corr) %in% res$remove_constant
-                                                           ]
-                                             , cutoff = thresh
-                                             , names = TRUE
-                                             )
-
-  }
-
   # rf -------
   if(!is.null(y_col)) {
 
     rf_dat <- env_df %>%
-      dplyr::select(!tidyselect::any_of(c(res$remove_constant, res$remove_corr)))
+      dplyr::select(!tidyselect::any_of(c(res$remove_constant)))
 
     y <- rf_dat %>%
       dplyr::pull(!!rlang::ensym(y_col)) %>%
@@ -113,14 +97,31 @@ reduce_env <- function(env_df
     res$rf_imp <- randomForest::importance(res$rf) %>%
       tibble::as_tibble(rownames = "env") %>%
       dplyr::arrange(!!rlang::ensym(imp_col)) %>%
-      dplyr::mutate(imp = !!rlang::ensym(imp_col) > stats::quantile(!!rlang::ensym(imp_col) , probs = (1 - thresh)))
+      dplyr::mutate(imp = !!rlang::ensym(imp_col) > stats::quantile(!!rlang::ensym(imp_col), probs = (1 - thresh)))
 
     res$remove_rf <- res$rf_imp %>% dplyr::filter(!imp) %>% dplyr::pull(env)
 
   }
 
+  # corr -------
+  res$env_corr <- env_df %>%
+    dplyr::select(tidyselect::any_of(env_cols)) %>%
+    dplyr::select(!tidyselect::any_of(res$remove_constant)) %>%
+    stats::cor(use = "complete.obs")
+
+  if(dim(res$env_corr)[2]) {
+
+    res$remove_corr <- caret::findCorrelation(res$env_corr[!rownames(res$env_corr) %in% res$remove_constant
+                                                           ,!colnames(res$env_corr) %in% res$remove_constant
+                                                           ]
+                                             , cutoff = thresh
+                                             , names = TRUE
+                                             )
+
+  }
+
   # remove-------
-  res$remove <- c(res$remove_corr, res$remove_constant, res$remove_rf, remove_always)
+  res$remove <- unique(c(res$remove_corr, res$remove_constant, res$remove_rf, remove_always))
 
   if(!is.null(keep_always)) {
 
