@@ -47,7 +47,8 @@ optionally, important variables as precursor to further analysis.</p>
 <span>  y_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  y_col_factor <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  imp_col <span class="op">=</span> <span class="st">"1"</span>,</span>
-<span>  thresh <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span>  thresh_corr <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span>  quant_rf_imp <span class="op">=</span> <span class="fl">1</span> <span class="op">-</span> <span class="va">thresh_corr</span>,</span>
 <span>  remove_always <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lat"</span>, <span class="st">"long"</span><span class="op">)</span>,</span>
 <span>  keep_always <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -69,7 +70,8 @@ that contain the variables to test for correlation. Correlation is found via
 
 <dt id="arg-y-col">y_col<a class="anchor" aria-label="anchor" href="#arg-y-col"></a></dt>
 <dd><p>Character. Name of a column in <code>env_df</code> to test for
-'important' variables.</p></dd>
+'important' variables via <code><a href="https://rdrr.io/pkg/randomForest/man/randomForest.html" class="external-link">randomForest::randomForest()</a></code>. Set as <code>NULL</code> to
+not check for importance.</p></dd>
 
 
 <dt id="arg-y-col-factor">y_col_factor<a class="anchor" aria-label="anchor" href="#arg-y-col-factor"></a></dt>
@@ -83,9 +85,14 @@ regression.</p></dd>
 <code><a href="https://rdrr.io/pkg/randomForest/man/importance.html" class="external-link">randomForest::importance()</a></code> to use in deciding 'importance' of a variable.</p></dd>
 
 
-<dt id="arg-thresh">thresh<a class="anchor" aria-label="anchor" href="#arg-thresh"></a></dt>
+<dt id="arg-thresh-corr">thresh_corr<a class="anchor" aria-label="anchor" href="#arg-thresh-corr"></a></dt>
 <dd><p>Numeric. Threshold correlation value above which a variable
 is flagged as correlated.</p></dd>
+
+
+<dt id="arg-quant-rf-imp">quant_rf_imp<a class="anchor" aria-label="anchor" href="#arg-quant-rf-imp"></a></dt>
+<dd><p>Numeric. Quantile below which a variable is flagged as
+not important</p></dd>
 
 
 <dt id="arg-remove-always">remove_always<a class="anchor" aria-label="anchor" href="#arg-remove-always"></a></dt>
@@ -143,13 +150,32 @@ itemize</p>
 <span class="r-in"><span><span class="va">pb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">presvals</span>, <span class="va">absvals</span><span class="op">)</span></span></span>
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'presvals' not found</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># find correlated and 'unimportant' variables</span></span></span>
+<span class="r-in"><span><span class="co"># find correlated variables</span></span></span>
 <span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">reduce_env</span><span class="op">(</span><span class="va">pb</span></span></span>
-<span class="r-in"><span>                  , env_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">predictors</span><span class="op">)</span></span></span>
-<span class="r-in"><span>                  , y_col <span class="op">=</span> <span class="st">"pa"</span></span></span>
-<span class="r-in"><span>                  , imp_col <span class="op">=</span> <span class="st">"1"</span></span></span>
-<span class="r-in"><span>                  , thresh <span class="op">=</span> <span class="fl">0.9</span></span></span>
-<span class="r-in"><span>                  <span class="op">)</span></span></span>
+<span class="r-in"><span>                     , env_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">predictors</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                     , thresh_corr <span class="op">=</span> <span class="fl">0.9</span></span></span>
+<span class="r-in"><span>                     <span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'predictors' not found</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'result' not found</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">result</span><span class="op">$</span><span class="va">remove_corr</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'result' not found</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">result</span><span class="op">$</span><span class="va">remove_rf</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'result' not found</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">result</span><span class="op">$</span><span class="va">keep</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'result' not found</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># find 'unimportant' variables</span></span></span>
+<span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">reduce_env</span><span class="op">(</span><span class="va">pb</span></span></span>
+<span class="r-in"><span>                     , env_cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">predictors</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                     , y_col <span class="op">=</span> <span class="st">"pa"</span></span></span>
+<span class="r-in"><span>                     , thresh_corr <span class="op">=</span> <span class="fl">1</span></span></span>
+<span class="r-in"><span>                     , quant_rf_imp <span class="op">=</span> <span class="fl">0.5</span></span></span>
+<span class="r-in"><span>                     <span class="op">)</span></span></span>
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'predictors' not found</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
