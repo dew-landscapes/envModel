@@ -7,11 +7,11 @@
 reduce_env(
   env_df,
   env_cols,
-  y_col = NULL,
+  y_col = "pa",
   y_col_factor = TRUE,
   imp_col = "1",
-  thresh_corr = 0.95,
-  quant_rf_imp = 1 - thresh_corr,
+  thresh_corr = 0.9,
+  quant_rf_imp = NULL,
   remove_always = c("lat", "long"),
   keep_always = NULL
 )
@@ -24,21 +24,24 @@ that contain the variables to test for correlation. Correlation is found via
 \code{\link[caret:findCorrelation]{caret::findCorrelation()}}.}
 
 \item{y_col}{Character. Name of a column in \code{env_df} to test for
-'important' variables via \code{randomForest::randomForest()}. Set as \code{NULL} to
-not check for importance.}
+'important' variables via \code{randomForest::randomForest()}. Not used if
+\code{quant_rf_imp} is \code{NULL}.}
 
 \item{y_col_factor}{Logical. Should \code{y_col} be considered a
 factor in \code{randomForest::randomForest()}? Thus classification rather than
-regression.}
+regression. Not used if \code{quant_rf_imp} is \code{NULL}.}
 
 \item{imp_col}{Character. Name of column in result of call to
-\code{randomForest::importance()} to use in deciding 'importance' of a variable.}
+\code{randomForest::importance()} to use in deciding 'importance' of a variable.
+Not used if \code{quant_rf_imp} is \code{NULL}.}
 
-\item{thresh_corr}{Numeric. Threshold correlation value above which a variable
-is flagged as correlated.}
+\item{thresh_corr}{Numeric or \code{NULL}. Threshold correlation value above which
+a variable is flagged as correlated. Set to \code{NULL} to skip removal of
+any correlated variables.}
 
 \item{quant_rf_imp}{Numeric. Quantile below which a variable is flagged as
-not important}
+not important. Set to \code{NULL} to skip removal of variables with low random
+forest importance.}
 
 \item{remove_always}{Character. Any matches will always be removed (even if
 not correlated).}
@@ -64,8 +67,10 @@ analysis, based on results from \code{reduce_env()}}
 }
 }
 \description{
-Given a data frame of environmental variables, flag correlated, and
-optionally, important variables as precursor to further analysis.
+Given a data frame of environmental variables, flag correlated, and/or
+important variables as precursor to further analysis. Importance is taken
+from the variable importance result of \code{randomForest::randomForest()}. Thus
+it is not deterministic and can vary between runs.
 }
 \examples{
 
@@ -112,8 +117,8 @@ result$keep
 result <- reduce_env(pb
                      , env_cols = names(predictors)
                      , y_col = "pa"
-                     , thresh_corr = 1
-                     , quant_rf_imp = 0.5
+                     , thresh_corr = NULL
+                     , quant_rf_imp = 0.1
                      )
 
 names(result)
@@ -123,4 +128,21 @@ result$remove_corr
 result$remove_rf
 
 result$keep
+
+# use both
+result <- reduce_env(pb
+                     , env_cols = names(predictors)
+                     , y_col = "pa"
+                     , thresh_corr = 0.95
+                     , quant_rf_imp = 0.2
+                     )
+
+names(result)
+
+result$remove_corr
+
+result$remove_rf
+
+result$keep
+
 }

@@ -42,8 +42,8 @@ result$keep
 result <- reduce_env(pb
                      , env_cols = names(predictors)
                      , y_col = "pa"
-                     , thresh_corr = 1
-                     , quant_rf_imp = 0.5
+                     , thresh_corr = NULL
+                     , quant_rf_imp = 0.1
                      )
 
 names(result)
@@ -53,3 +53,20 @@ result$remove_corr
 result$remove_rf
 
 result$keep
+
+# use both
+result <- reduce_env(pb
+                     , env_cols = names(predictors)
+                     , y_col = "pa"
+                     , thresh_corr = 0.95
+                     , quant_rf_imp = 0.2
+                     )
+
+names(result)
+
+result$remove_corr
+
+result$remove_rf
+
+result$keep
+
