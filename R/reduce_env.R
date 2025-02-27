@@ -1,25 +1,30 @@
 
 #' Reduce number of environmental variables
 #'
-#' Given a data frame of environmental variables, flag correlated, and
-#' optionally, important variables as precursor to further analysis.
+#' Given a data frame of environmental variables, flag correlated, and/or
+#' important variables as precursor to further analysis. Importance is taken
+#' from the variable importance result of `randomForest::randomForest()`. Thus
+#' it is not deterministic and can vary between runs.
 #'
 #' @param env_df Dataframe with environmental variables
 #' @param env_cols Numeric or character vector defining columns in env_df
 #' that contain the variables to test for correlation. Correlation is found via
 #' [caret::findCorrelation()].
 #' @param y_col Character. Name of a column in `env_df` to test for
-#' 'important' variables via `randomForest::randomForest()`. Set as `NULL` to
-#' not check for importance.
+#' 'important' variables via `randomForest::randomForest()`. Not used if
+#' `quant_rf_imp` is `NULL`.
 #' @param y_col_factor Logical. Should `y_col` be considered a
 #' factor in `randomForest::randomForest()`? Thus classification rather than
-#' regression.
+#' regression. Not used if `quant_rf_imp` is `NULL`.
 #' @param imp_col Character. Name of column in result of call to
 #' `randomForest::importance()` to use in deciding 'importance' of a variable.
-#' @param thresh_corr Numeric. Threshold correlation value above which a variable
-#' is flagged as correlated.
+#' Not used if `quant_rf_imp` is `NULL`.
+#' @param thresh_corr Numeric or `NULL`. Threshold correlation value above which
+#' a variable is flagged as correlated. Set to `NULL` to skip removal of
+#' any correlated variables.
 #' @param quant_rf_imp Numeric. Quantile below which a variable is flagged as
-#' not important
+#' not important. Set to `NULL` to skip removal of variables with low random
+#' forest importance.
 #' @param remove_always Character. Any matches will always be removed (even if
 #' not correlated).
 #' @param keep_always Character vector. Any string in this vector, if matched,
@@ -45,11 +50,11 @@
 #' @example inst/examples/reduce_env_ex.R
 reduce_env <- function(env_df
                        , env_cols
-                       , y_col = NULL
+                       , y_col = "pa"
                        , y_col_factor = TRUE
                        , imp_col = "1"
-                       , thresh_corr = 0.95
-                       , quant_rf_imp = 1 - thresh_corr
+                       , thresh_corr = 0.90
+                       , quant_rf_imp = NULL
                        , remove_always = c("lat", "long")
                        , keep_always = NULL
                        ) {
@@ -72,7 +77,7 @@ reduce_env <- function(env_df
   res$remove_constant <- names(env_df_no_factor[sapply(env_df_no_factor, function(v) var(v, na.rm=TRUE)==0)])
 
   # rf -------
-  if(!is.null(y_col)) {
+  if(!is.null(quant_rf_imp)) {
 
     rf_dat <- env_df %>%
       dplyr::select(!tidyselect::any_of(c(res$remove_constant)))
@@ -104,24 +109,28 @@ reduce_env <- function(env_df
 
     res$remove_rf <- res$rf_imp %>% dplyr::filter(!imp) %>% dplyr::pull(env)
 
-  }
+  } else res$remove_rf <- NULL
 
   # corr -------
-  res$env_corr <- env_df %>%
-    dplyr::select(tidyselect::any_of(env_cols)) %>%
-    dplyr::select(!tidyselect::any_of(res$remove_constant)) %>%
-    stats::cor(use = "complete.obs")
+  if(!is.null(thresh_corr)) {
 
-  if(dim(res$env_corr)[2]) {
+    res$env_corr <- env_df %>%
+      dplyr::select(tidyselect::any_of(env_cols)) %>%
+      dplyr::select(!tidyselect::any_of(res$remove_constant)) %>%
+      stats::cor(use = "complete.obs")
 
-    res$remove_corr <- caret::findCorrelation(res$env_corr[!rownames(res$env_corr) %in% res$remove_constant
-                                                           ,!colnames(res$env_corr) %in% res$remove_constant
-                                                           ]
-                                             , cutoff = thresh_corr
-                                             , names = TRUE
-                                             )
+    if(dim(res$env_corr)[2]) {
 
-  }
+      res$remove_corr <- caret::findCorrelation(res$env_corr[!rownames(res$env_corr) %in% res$remove_constant
+                                                             ,!colnames(res$env_corr) %in% res$remove_constant
+                                                             ]
+                                                , cutoff = thresh_corr
+                                                , names = TRUE
+                                                )
+
+    }
+
+  } else res$remove_corr <- NULL
 
   # remove-------
   res$remove <- unique(c(res$remove_corr, res$remove_constant, res$remove_rf, remove_always))
