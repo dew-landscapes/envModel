@@ -16,8 +16,10 @@
 #' regression.
 #' @param imp_col Character. Name of column in result of call to
 #' `randomForest::importance()` to use in deciding 'importance' of a variable.
-#' @param thresh Numeric. Threshold correlation value above which a variable
+#' @param thresh_corr Numeric. Threshold correlation value above which a variable
 #' is flagged as correlated.
+#' @param quant_rf_imp Numeric. Quantile below which a variable is flagged as
+#' not important
 #' @param remove_always Character. Any matches will always be removed (even if
 #' not correlated).
 #' @param keep_always Character vector. Any string in this vector, if matched,
@@ -31,7 +33,7 @@
 #'  \item{remove_constant}{columns with only one value}
 #'  \item{env_corr}{result of applying [stats::cor()] to `env_df[,env_cols]`}
 #'  \item{remove_corr}{column names in `env_df` that are correlated with another
-#'  column above `thresh`.}
+#'  column above `thresh_corr`.}
 #'  \item{rf}{result of applying `randomforest::randomforest()` in the form of
 #'  y_col ~ env_cols}
 #'  \item{rf_vi}{variable importance from rf}
@@ -46,7 +48,8 @@ reduce_env <- function(env_df
                        , y_col = NULL
                        , y_col_factor = TRUE
                        , imp_col = "1"
-                       , thresh = 0.95
+                       , thresh_corr = 0.95
+                       , quant_rf_imp = 1 - thresh_corr
                        , remove_always = c("lat", "long")
                        , keep_always = NULL
                        ) {
@@ -56,7 +59,7 @@ reduce_env <- function(env_df
   res <- list(env_cols = env_cols
               , remove_always = remove_always
               , keep_always = if(!is.null(keep_always)) keep_always else NULL
-              , thresh = thresh
+              , thresh_corr = thresh_corr
               )
 
   # const -------
@@ -97,7 +100,7 @@ reduce_env <- function(env_df
     res$rf_imp <- randomForest::importance(res$rf) %>%
       tibble::as_tibble(rownames = "env") %>%
       dplyr::arrange(!!rlang::ensym(imp_col)) %>%
-      dplyr::mutate(imp = !!rlang::ensym(imp_col) > stats::quantile(!!rlang::ensym(imp_col), probs = (1 - thresh)))
+      dplyr::mutate(imp = !!rlang::ensym(imp_col) > stats::quantile(!!rlang::ensym(imp_col), probs = quant_rf_imp))
 
     res$remove_rf <- res$rf_imp %>% dplyr::filter(!imp) %>% dplyr::pull(env)
 
@@ -114,7 +117,7 @@ reduce_env <- function(env_df
     res$remove_corr <- caret::findCorrelation(res$env_corr[!rownames(res$env_corr) %in% res$remove_constant
                                                            ,!colnames(res$env_corr) %in% res$remove_constant
                                                            ]
-                                             , cutoff = thresh
+                                             , cutoff = thresh_corr
                                              , names = TRUE
                                              )
 
