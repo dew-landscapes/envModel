@@ -10,7 +10,8 @@ reduce_env(
   y_col = NULL,
   y_col_factor = TRUE,
   imp_col = "1",
-  thresh = 0.95,
+  thresh_corr = 0.95,
+  quant_rf_imp = 1 - thresh_corr,
   remove_always = c("lat", "long"),
   keep_always = NULL
 )
@@ -23,7 +24,8 @@ that contain the variables to test for correlation. Correlation is found via
 \code{\link[caret:findCorrelation]{caret::findCorrelation()}}.}
 
 \item{y_col}{Character. Name of a column in \code{env_df} to test for
-'important' variables.}
+'important' variables via \code{randomForest::randomForest()}. Set as \code{NULL} to
+not check for importance.}
 
 \item{y_col_factor}{Logical. Should \code{y_col} be considered a
 factor in \code{randomForest::randomForest()}? Thus classification rather than
@@ -32,8 +34,11 @@ regression.}
 \item{imp_col}{Character. Name of column in result of call to
 \code{randomForest::importance()} to use in deciding 'importance' of a variable.}
 
-\item{thresh}{Numeric. Threshold correlation value above which a variable
+\item{thresh_corr}{Numeric. Threshold correlation value above which a variable
 is flagged as correlated.}
+
+\item{quant_rf_imp}{Numeric. Quantile below which a variable is flagged as
+not important}
 
 \item{remove_always}{Character. Any matches will always be removed (even if
 not correlated).}
@@ -50,7 +55,7 @@ itemize{
 \item{remove_constant}{columns with only one value}
 \item{env_corr}{result of applying \code{\link[stats:cor]{stats::cor()}} to \code{env_df[,env_cols]}}
 \item{remove_corr}{column names in \code{env_df} that are correlated with another
-column above \code{thresh}.}
+column above \code{thresh_corr}.}
 \item{rf}{result of applying \code{randomforest::randomforest()} in the form of
 y_col ~ env_cols}
 \item{rf_vi}{variable importance from rf}
@@ -89,13 +94,27 @@ absvals$pa <- 0
 # presences + background
 pb <- rbind(presvals, absvals)
 
-# find correlated and 'unimportant' variables
+# find correlated variables
 result <- reduce_env(pb
-                  , env_cols = names(predictors)
-                  , y_col = "pa"
-                  , imp_col = "1"
-                  , thresh = 0.9
-                  )
+                     , env_cols = names(predictors)
+                     , thresh_corr = 0.9
+                     )
+
+names(result)
+
+result$remove_corr
+
+result$remove_rf
+
+result$keep
+
+# find 'unimportant' variables
+result <- reduce_env(pb
+                     , env_cols = names(predictors)
+                     , y_col = "pa"
+                     , thresh_corr = 1
+                     , quant_rf_imp = 0.5
+                     )
 
 names(result)
 

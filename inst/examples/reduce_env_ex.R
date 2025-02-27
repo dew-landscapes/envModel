@@ -24,13 +24,27 @@ absvals$pa <- 0
 # presences + background
 pb <- rbind(presvals, absvals)
 
-# find correlated and 'unimportant' variables
+# find correlated variables
 result <- reduce_env(pb
-                  , env_cols = names(predictors)
-                  , y_col = "pa"
-                  , imp_col = "1"
-                  , thresh = 0.9
-                  )
+                     , env_cols = names(predictors)
+                     , thresh_corr = 0.9
+                     )
+
+names(result)
+
+result$remove_corr
+
+result$remove_rf
+
+result$keep
+
+# find 'unimportant' variables
+result <- reduce_env(pb
+                     , env_cols = names(predictors)
+                     , y_col = "pa"
+                     , thresh_corr = 1
+                     , quant_rf_imp = 0.5
+                     )
 
 names(result)
 
