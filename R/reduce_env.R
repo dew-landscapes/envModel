@@ -76,6 +76,11 @@ reduce_env <- function(env_df
 
   res$remove_constant <- names(env_df_no_factor[sapply(env_df_no_factor, function(v) var(v, na.rm=TRUE)==0)])
 
+  res$env_corr <- env_df %>%
+      dplyr::select(tidyselect::any_of(env_cols)) %>%
+      dplyr::select(!tidyselect::any_of(res$remove_constant)) %>%
+      stats::cor(use = "complete.obs")
+
   # rf -------
   if(!is.null(quant_rf_imp)) {
 
@@ -113,11 +118,6 @@ reduce_env <- function(env_df
 
   # corr -------
   if(!is.null(thresh_corr)) {
-
-    res$env_corr <- env_df %>%
-      dplyr::select(tidyselect::any_of(env_cols)) %>%
-      dplyr::select(!tidyselect::any_of(res$remove_constant)) %>%
-      stats::cor(use = "complete.obs")
 
     if(dim(res$env_corr)[2]) {
 
