@@ -135,7 +135,7 @@
     }
 
     res <- results$score() %>%
-      dplyr::mutate(metrics = purrr::map(prediction
+      dplyr::mutate(metrics = purrr::map(prediction_test
                                          , ~envModel::get_conf_metrics(truth_vec = .$truth
                                                                        , pred_vec = .$response
                                                                        )

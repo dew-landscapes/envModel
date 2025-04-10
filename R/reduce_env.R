@@ -65,6 +65,7 @@ reduce_env <- function(env_df
               , remove_always = remove_always
               , keep_always = if(!is.null(keep_always)) keep_always else NULL
               , thresh_corr = thresh_corr
+              , quant_rf_imp = quant_rf_imp
               )
 
   # const -------
