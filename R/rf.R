@@ -282,15 +282,13 @@
           } else 0
 
 
-        cat(
-          paste0("ntree: ", rf_good$rf_res$ntree[[nrow(rf_good$rf_res)]]
+        message("ntree: ", rf_good$rf_res$ntree[[nrow(rf_good$rf_res)]]
                 , "\n counter on: ", counter, " (Stop at ",accept_run,")"
-                 , "\n kappa: ",round(rf_good$rf_res$kap[[nrow(rf_good$rf_res)]],4)
-                 , "\n changed predictions: ",paste0(round(100-100*rf_good$rf_res$prev_delta[nrow(rf_good$rf_res)],3),"%")
-                 , "\n kappa based on confusion with last run: ", round(rf_good$rf_res$prev_kappa[[nrow(rf_good$rf_res)]],4)
-                 , "\n elapsed time: ", as.numeric(round(difftime(Sys.time(), go_time, units = "secs"),2)), " seconds\n\n"
-                 )
-        )
+                , "\n kappa: ",round(rf_good$rf_res$kap[[nrow(rf_good$rf_res)]],4)
+                , "\n changed predictions: ",paste0(round(100-100*rf_good$rf_res$prev_delta[nrow(rf_good$rf_res)],3),"%")
+                , "\n kappa based on confusion with last run: ", round(rf_good$rf_res$prev_kappa[[nrow(rf_good$rf_res)]],4)
+                , "\n elapsed time: ", as.numeric(round(difftime(Sys.time(), go_time, units = "secs"),2)), " seconds\n\n"
+                )
 
       }
 
