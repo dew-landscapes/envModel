@@ -7,6 +7,8 @@
 #' @param clust_col Character. Name of column with cluster membership.
 #' @param folds Numeric. How many folds to use in cross-validation?
 #' @param reps Numeric. How many repeats of cross-validation?
+#' @param trees Numeric. num.trees parameter in `mlr3::lrn()` (with random
+#' classification forest using `ranger::ranger()` from package ranger).
 #' @param down_sample Logical. If TRUE, the `sample.fraction` argument to
 #' `ranger::ranger()` is set to the minimum number of sites in any one cluster
 #' divided by the total number of sites.
@@ -28,129 +30,131 @@
 #' @export
 #'
 #' @examples
-  make_rf_diagnostics <- function(env_df
-                           , clust_col = "cluster"
-                           , folds = 3L
-                           , reps = 5L
-                           , down_sample = TRUE
-                           , range_m = as.integer(seq(20000L, 100000L, length.out = reps))
-                           , set_min = FALSE
-                           , mlr3_cv_method = "repeated_cv"
-                           , coords = c("long", "lat")
-                           , crs_df = 4283
-                           ) {
+make_rf_diagnostics <- function(env_df
+                                , clust_col = "cluster"
+                                , folds = 3L
+                                , reps = 5L
+                                , trees = 999
+                                , down_sample = TRUE
+                                , range_m = as.integer(seq(20000L, 100000L, length.out = reps))
+                                , set_min = FALSE
+                                , mlr3_cv_method = "repeated_cv"
+                                , coords = c("long", "lat")
+                                , crs_df = 4283
+                                ) {
 
-    stopifnot(mlr3_cv_method %in% data.table::as.data.table(mlr_resamplings)$key)
+  stopifnot(mlr3_cv_method %in% data.table::as.data.table(mlr3::mlr_resamplings)$key)
 
-    .clust_col = clust_col
+  # env_df_use --------
+  env_df_use <- if(!isFALSE(set_min)) {
 
-    env_df_use <- if(!isFALSE(set_min)) {
+    env_df %>%
+      dplyr::add_count(!!rlang::ensym(clust_col)) %>%
+      dplyr::filter(n > set_min) %>%
+      dplyr::select(-n)
 
-      env_df %>%
-        dplyr::add_count(!!rlang::ensym(clust_col)) %>%
-        dplyr::filter(n > set_min) %>%
-        dplyr::select(-n) %>%
-        dplyr::mutate(!!clust_col := factor(!!rlang::ensym(clust_col)))
+  } else env_df
 
-    } else env_df
+  env_df_use <- env_df_use |>
+    dplyr::mutate(!!clust_col := factor(!!rlang::ensym(clust_col)))
 
-    samp_prop <- if(down_sample) {
+  # samp prop -------
+  samp_prop <- if(down_sample) {
 
-        min(table(env_df_use[[clust_col]])) / nrow(env_df_use)
+      min(table(env_df_use[[clust_col]])) / nrow(env_df_use)
 
-      } else {
+    } else {
 
-        1 # sample.fraction = ifelse(replace, 1, 0.632) are the ranger::ranger defaults (and default replace = TRUE)
-
-      }
-
-    start_time <- Sys.time()
-
-    if(!grepl("spcv|sptcv", mlr3_cv_method)) {
-
-      #-----non-spatial------
-
-      # task
-      task <- mlr3::TaskClassif$new("env_rf"
-                                    , backend = env_df_use
-                                    , target = clust_col
-                                    )
-
-      task$col_roles$stratum <- clust_col
-
-      # learner
-      learner <- mlr3::lrn("classif.ranger"
-                           , sample.fraction = samp_prop
-                           )
-
-      # resampling
-      re <- mlr3::rsmp(mlr3_cv_method
-                          , folds = as.integer(folds)
-                          , repeats = as.integer(reps)
-                          )
-
-      # sample
-      results <- mlr3::resample(task
-                                , learner
-                                , re
-                                )
-
-    } else if(grepl("spcv|sptcv", mlr3_cv_method)) {
-
-      #-------spatial-------
-
-      # sf object
-      env_df_sf <- sf::st_as_sf(env_df_use
-                                , coords = use_coords
-                                , crs = crs_df
-                                )
-
-      # task
-      task <- mlr3spatiotempcv::TaskClassifST$new("env_rf"
-                                                  , backend = env_df_sf
-                                                  , target = clust_col
-                                                  )
-
-      task$col_roles$stratum <- clust_col
-
-      # learner
-      learner <- mlr3::lrn("classif.ranger"
-                           , sample.fraction = samp_prop
-                           , mtry = to_tune(1, 10)
-                           )
-
-      # spatial resampling
-      re <- mlr3::rsmp(mlr3_cv_method
-                       , folds = as.integer(folds)
-                       , repeats = as.integer(reps)
-                       , range = range_m
-                       )
-
-      # sample
-      results <- mlr3::resample(task
-                                , learner
-                                , re
-                                )
+      1 # sample.fraction = ifelse(replace, 1, 0.632) are the ranger::ranger defaults (and default replace = TRUE)
 
     }
 
-    res <- results$score() %>%
-      dplyr::mutate(metrics = purrr::map(prediction_test
-                                         , ~envModel::get_conf_metrics(truth_vec = .$truth
-                                                                       , pred_vec = .$response
-                                                                       )
-                                         )
-                    ) %>%
-      dplyr::select(iteration, classif.ce, metrics) %>%
-      tidyr::unnest(cols = c(metrics))
+  start_time <- Sys.time()
 
-    res$seconds <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
+  if(!grepl("spcv|sptcv", mlr3_cv_method)) {
 
-    stuff <- ls() %>% grep("res", ., value = TRUE, invert = TRUE)
+    #-----non-spatial------
 
-    rm(list = stuff)
+    ## task-----
+    task <- mlr3::TaskClassif$new("env_rf"
+                                  , backend = env_df_use
+                                  , target = clust_col
+                                  )
 
-    return(res)
+    task$col_roles$stratum <- clust_col
+
+    ## learner------
+    learner <- mlr3::lrn("classif.ranger"
+                         , sample.fraction = samp_prop
+                         , num.trees = trees
+                         )
+
+    ## resampling-------
+    re <- mlr3::rsmp(mlr3_cv_method
+                        , folds = as.integer(folds)
+                        , repeats = as.integer(reps)
+                        )
+
+    ## sample--------
+    results <- mlr3::resample(task
+                              , learner
+                              , re
+                              )
+
+  } else if(grepl("spcv|sptcv", mlr3_cv_method)) {
+
+    #-------spatial-------
+
+    ## sf object -------
+    env_df_sf <- sf::st_as_sf(env_df_use
+                              , coords = use_coords
+                              , crs = crs_df
+                              )
+
+    ## task --------
+    task <- mlr3spatiotempcv::TaskClassifST$new("env_rf"
+                                                , backend = env_df_sf
+                                                , target = clust_col
+                                                )
+
+    task$col_roles$stratum <- clust_col
+
+    ## learner-------
+    learner <- mlr3::lrn("classif.ranger"
+                         , sample.fraction = samp_prop
+                         , mtry = to_tune(1, 10)
+                         , num.trees = trees
+                         )
+
+    ## spatial resampling ---------
+    re <- mlr3::rsmp(mlr3_cv_method
+                     , folds = as.integer(folds)
+                     , repeats = as.integer(reps)
+                     , range = range_m
+                     )
+
+    ## sample -----------
+    results <- mlr3::resample(task
+                              , learner
+                              , re
+                              )
 
   }
+
+  # results --------
+  res <- results$score() %>%
+    dplyr::mutate(metrics = purrr::map(prediction_test
+                                       , ~envModel::get_conf_metrics(truth_vec = .$truth
+                                                                     , pred_vec = .$response
+                                                                     )
+                                       )
+                  ) %>%
+    dplyr::select(iteration, classif.ce, metrics) %>%
+    tidyr::unnest(cols = c(metrics))
+
+  res$seconds <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
+
+  return(res)
+
+}
 

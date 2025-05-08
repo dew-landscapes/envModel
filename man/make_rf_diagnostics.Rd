@@ -9,6 +9,7 @@ make_rf_diagnostics(
   clust_col = "cluster",
   folds = 3L,
   reps = 5L,
+  trees = 999,
   down_sample = TRUE,
   range_m = as.integer(seq(20000L, 100000L, length.out = reps)),
   set_min = FALSE,
@@ -25,6 +26,9 @@ make_rf_diagnostics(
 \item{folds}{Numeric. How many folds to use in cross-validation?}
 
 \item{reps}{Numeric. How many repeats of cross-validation?}
+
+\item{trees}{Numeric. num.trees parameter in \code{mlr3::lrn()} (with random
+classification forest using \code{ranger::ranger()} from package ranger).}
 
 \item{down_sample}{Logical. If TRUE, the \code{sample.fraction} argument to
 \code{ranger::ranger()} is set to the minimum number of sites in any one cluster
