@@ -38,7 +38,7 @@ divided by the total number of sites.}
 of the reference system of the input data) for block size(s) if using
 \code{\link[blockCV:spatialBlock]{blockCV::spatialBlock()}}. If reps > 1, an equivalent number of range_m
 values are required to ensure the folds are different between repetitions.
-\code{repeated_spcv_block}.}
+\code{repeated_spcv_block}. Only needed if using spatial cross validation.}
 
 \item{set_min}{FALSE or numeric. If numeric, classes in \code{clust_col} with less
 than \code{set_min} cases will be filtered.}
@@ -47,10 +47,11 @@ than \code{set_min} cases will be filtered.}
 "repeated_cv" or "repeated_spcv_block".}
 
 \item{coords}{Character vector of length 2. Names of columns in \code{env_df} with
-x and y coordinates.}
+x and y coordinates. Only needed if using spatial cross validation.}
 
 \item{crs_df}{Coordinate reference system for \code{coords}. Passed to the
-\code{crs} argument of \code{\link[sf:st_as_sf]{sf::st_as_sf()}}.}
+\code{crs} argument of \code{\link[sf:st_as_sf]{sf::st_as_sf()}}. Only needed if using spatial cross
+validation.}
 }
 \description{
 Run random forest, returning only diagnostic values.
