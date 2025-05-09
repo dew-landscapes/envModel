@@ -89,7 +89,7 @@ divided by the total number of sites.</p></dd>
 of the reference system of the input data) for block size(s) if using
 <code>blockCV::spatialBlock()</code>. If reps &gt; 1, an equivalent number of range_m
 values are required to ensure the folds are different between repetitions.
-<code>repeated_spcv_block</code>.</p></dd>
+<code>repeated_spcv_block</code>. Only needed if using spatial cross validation.</p></dd>
 
 
 <dt id="arg-set-min">set_min<a class="anchor" aria-label="anchor" href="#arg-set-min"></a></dt>
@@ -104,12 +104,13 @@ than <code>set_min</code> cases will be filtered.</p></dd>
 
 <dt id="arg-coords">coords<a class="anchor" aria-label="anchor" href="#arg-coords"></a></dt>
 <dd><p>Character vector of length 2. Names of columns in <code>env_df</code> with
-x and y coordinates.</p></dd>
+x and y coordinates. Only needed if using spatial cross validation.</p></dd>
 
 
 <dt id="arg-crs-df">crs_df<a class="anchor" aria-label="anchor" href="#arg-crs-df"></a></dt>
 <dd><p>Coordinate reference system for <code>coords</code>. Passed to the
-<code>crs</code> argument of <code><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">sf::st_as_sf()</a></code>.</p></dd>
+<code>crs</code> argument of <code><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">sf::st_as_sf()</a></code>. Only needed if using spatial cross
+validation.</p></dd>
 
 </dl></div>
 
