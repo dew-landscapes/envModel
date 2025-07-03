@@ -79,9 +79,13 @@ classification forest using <code>ranger::ranger()</code> from package ranger).<
 
 
 <dt id="arg-down-sample">down_sample<a class="anchor" aria-label="anchor" href="#arg-down-sample"></a></dt>
-<dd><p>Logical. If TRUE, the <code>sample.fraction</code> argument to
-<code>ranger::ranger()</code> is set to the minimum number of sites in any one cluster
-divided by the total number of sites.</p></dd>
+<dd><p>Logical or numeric. If TRUE, the <code>sample.fraction</code>
+argument to <code>ranger::ranger()</code> is set to the minimum number of sites in any
+one cluster divided by the total number of sites. If numeric, the
+<code>sample.fraction</code> argument varies per cluster as <code>down_sample / n_sites</code>
+where <code>n_sites</code> is the number of sites in that cluster. In cases where any
+element is greater than 1, it is set to 1. If <code>FALSE</code> the default
+<code>down_sample</code> argument of <code>ranger::ranger()</code> is used.</p></dd>
 
 
 <dt id="arg-range-m">range_m<a class="anchor" aria-label="anchor" href="#arg-range-m"></a></dt>
@@ -123,7 +127,7 @@ validation.</p></dd>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer></div>
