@@ -30,9 +30,13 @@ make_rf_diagnostics(
 \item{trees}{Numeric. num.trees parameter in \code{mlr3::lrn()} (with random
 classification forest using \code{ranger::ranger()} from package ranger).}
 
-\item{down_sample}{Logical. If TRUE, the \code{sample.fraction} argument to
-\code{ranger::ranger()} is set to the minimum number of sites in any one cluster
-divided by the total number of sites.}
+\item{down_sample}{Logical or numeric. If TRUE, the \code{sample.fraction}
+argument to \code{ranger::ranger()} is set to the minimum number of sites in any
+one cluster divided by the total number of sites. If numeric, the
+\code{sample.fraction} argument varies per cluster as \code{down_sample / n_sites}
+where \code{n_sites} is the number of sites in that cluster. In cases where any
+element is greater than 1, it is set to 1. If \code{FALSE} the default
+\code{down_sample} argument of \code{ranger::ranger()} is used.}
 
 \item{range_m}{Numeric. The distance in metres (regardless of the unit
 of the reference system of the input data) for block size(s) if using

@@ -69,6 +69,7 @@
 #' to folder path and file name.
 #' @param do_gc Logical. Run `gc()` when results are available and all other
 #' objects have been removed.
+#' @param ... Passed (via `make_rf_quick()`) to `randomForest::randomForest()`.
 #'
 #' @return
 #' @export

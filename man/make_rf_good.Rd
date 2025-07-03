@@ -68,6 +68,8 @@ to folder path and file name.}
 
 \item{do_gc}{Logical. Run \code{gc()} when results are available and all other
 objects have been removed.}
+
+\item{...}{Passed (via \code{make_rf_quick()}) to \code{randomForest::randomForest()}.}
 }
 \description{
 Iteratively add trees to random forest until predictions stabilise
