@@ -61,7 +61,7 @@
 
       df <- df |>
         dplyr::mutate(!!rlang::ensym(clust_col) := forcats::fct_expand(clust_col
-                                                                        , c(levels(df$cluster), levels(ecosystems_desc$cluster))
+                                                                        , c(levels(df[[clust_col]]), levels(add_clust[[add_clust_col]]))
                                                                         )
                       ) |>
         dplyr::bind_rows(df_add)
