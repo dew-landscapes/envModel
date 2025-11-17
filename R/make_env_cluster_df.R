@@ -60,7 +60,7 @@
                           )
 
       df <- df |>
-        dplyr::mutate(!!rlang::ensym(clust_col) := forcats::fct_expand(clust_col
+        dplyr::mutate(!!rlang::ensym(clust_col) := forcats::fct_expand(!!rlang::ensym(clust_col)
                                                                         , c(levels(df[[clust_col]]), levels(add_clust[[add_clust_col]]))
                                                                         )
                       ) |>
