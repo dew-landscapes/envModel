@@ -13,7 +13,6 @@
 #' @param add_env Dataframe with 'site' and associated env values for
 #' additionalClusters 'sites'.
 #' @param add_clust_col Character name of column in `add_clust` with 'clusters'.
-#' @param set_min Filter clusters those with 'sites' >= minsites
 #' @param env_cols Names of the columns containing the env variables.
 #'
 #' @return Dataframe of context columns, clustCol and envCols with rows from
@@ -25,44 +24,61 @@
   make_env_clust_df <- function(df
                                 , clust_col = "cluster"
                                 , context = "cell"
-                                , min_sites = min_abs_sites
+                                , min_sites = 0
                                 , df_env
                                 , add_clust = NULL
                                 , add_clust_col = "cluster"
                                 , add_env
                                 , env_cols
-                                , set_min = FALSE
+                                , set_min = lifecycle::deprecated()
                                 ) {
 
-    df <- df %>%
-      dplyr::select(any_of(context),!!rlang::ensym(clust_col)) %>%
-      dplyr::inner_join(df_env %>%
+    if (lifecycle::is_present(set_min)) {
+
+      lifecycle::deprecate_soft(
+        when = "2025-11-17"
+        , what = "envModel::make_env_clust_df(set_min = )"
+        , details = "set_min overlapped in intent with min_sites argument.\nUse min_sites to filter clusters with less than min_sites sites.\nDefault min_sites value (0) will not filter"
+      )
+
+    }
+
+    df <- df |>
+      dplyr::select(any_of(context),!!rlang::ensym(clust_col)) |>
+      dplyr::inner_join(df_env |>
                           na.omit()
                         )
 
     if(isTRUE(!is.null(add_clust))) {
 
-      df_add <- add_clust %>%
-        dplyr::select(any_of(context)
+      df_add <- add_clust |>
+        dplyr::select(tidyselect::any_of(context)
                       , !!rlang::ensym(clust_col) := !!rlang::ensym(add_clust_col)
-                      ) %>%
-        dplyr::inner_join(add_env %>%
+                      ) |>
+        dplyr::inner_join(add_env |>
                             na.omit()
                           )
 
-      df <- df %>%
+      df <- df |>
+        dplyr::mutate(!!rlang::ensym(clust_col) := forcats::fct_expand(clust_col
+                                                                        , c(levels(df$cluster), levels(ecosystems_desc$cluster))
+                                                                        )
+                      ) |>
         dplyr::bind_rows(df_add)
-
 
     }
 
-    df <- df %>%
-      dplyr::mutate(!!rlang::ensym(clust_col) := factor(!!rlang::ensym(clust_col))) %>%
-      dplyr::select(any_of(context),!!rlang::ensym(clust_col),all_of(env_cols))
+    df <- df |>
+      dplyr::select(tidyselect::any_of(context)
+                    , !!rlang::ensym(clust_col)
+                    , tidyselect::all_of(env_cols)
+                    )
 
-    df <- if(set_min) df %>%
-      dplyr::add_count(!!rlang::ensym(clust_col)) %>%
-      dplyr::filter(n > min_sites) %>%
-      dplyr::select(-n) else df
+    if(min_sites) df <- df |>
+      dplyr::add_count(!!rlang::ensym(clust_col)) |>
+      dplyr::filter(n > min_sites) |>
+      dplyr::select(-n)
+
+    return(df)
 
   }
