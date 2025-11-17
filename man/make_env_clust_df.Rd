@@ -8,13 +8,13 @@ make_env_clust_df(
   df,
   clust_col = "cluster",
   context = "cell",
-  min_sites = min_abs_sites,
+  min_sites = 0,
   df_env,
   add_clust = NULL,
   add_clust_col = "cluster",
   add_env,
   env_cols,
-  set_min = FALSE
+  set_min = lifecycle::deprecated()
 )
 }
 \arguments{
@@ -38,8 +38,6 @@ floristics such as land cover 'clusters')}
 additionalClusters 'sites'.}
 
 \item{env_cols}{Names of the columns containing the env variables.}
-
-\item{set_min}{Filter clusters those with 'sites' >= minsites}
 }
 \value{
 Dataframe of context columns, clustCol and envCols with rows from

@@ -8,8 +8,8 @@
 <title>Model Clusters as a Function of Environmental Variables • envModel</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
-<link href="deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Model Clusters as a Function of Environmental Variables">
 <meta name="description" content="Prepare data and run models (currently only random forest) to predict group membership as a function of environmental variables. Quick random forest runs over many clusterings outputting only confusion matrix then choose an area of clustering space for a good model and run (parallel) random forest, iteratively adding trees until results stabilise between iterations.">
 <meta property="og:description" content="Prepare data and run models (currently only random forest) to predict group membership as a function of environmental variables. Quick random forest runs over many clusterings outputting only confusion matrix then choose an area of clustering space for a good model and run (parallel) random forest, iteratively adding trees until results stabilise between iterations.">
@@ -68,52 +68,52 @@
 <p>The following functions and data sets are provided in <code>envModel</code>.</p>
 <table class="table">
 <colgroup>
-<col width="35%">
-<col width="7%">
-<col width="56%">
+<col width="33%">
+<col width="33%">
+<col width="33%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th align="left">object</th>
 <th align="left">class</th>
 <th align="left">description</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td align="left"><code><a href="reference/get_conf_metrics.html">envModel::get_conf_metrics()</a></code></td>
 <td align="left">function</td>
 <td align="left">Calculate diagnostics</td>
 </tr>
-<tr class="even">
+<tr>
 <td align="left"><code><a href="reference/make_env_clust_df.html">envModel::make_env_clust_df()</a></code></td>
 <td align="left">function</td>
 <td align="left">Add explanatory (environmental) variables to ‘site’ dataframe.</td>
 </tr>
-<tr class="odd">
+<tr>
 <td align="left"><code><a href="reference/make_env_corr.html">envModel::make_env_corr()</a></code></td>
 <td align="left">function</td>
 <td align="left">Generate correlation matrix and select variables to remove</td>
 </tr>
-<tr class="even">
+<tr>
 <td align="left"><code><a href="reference/make_rf_diagnostics.html">envModel::make_rf_diagnostics()</a></code></td>
 <td align="left">function</td>
 <td align="left">Run random forest, returning only diagnostic values.</td>
 </tr>
-<tr class="odd">
+<tr>
 <td align="left"><code><a href="reference/make_rf_diagnostics_old.html">envModel::make_rf_diagnostics_old()</a></code></td>
 <td align="left">function</td>
 <td align="left">Run random forest, usually returning only diagnostic values.</td>
 </tr>
-<tr class="even">
+<tr>
 <td align="left"><code><a href="reference/make_rf_diagnostics_spatialcv.html">envModel::make_rf_diagnostics_spatialcv()</a></code></td>
 <td align="left">function</td>
 <td align="left">Run random forest, returning only diagnostic values from spatial cross</td>
 </tr>
-<tr class="odd">
+<tr>
 <td align="left"><code><a href="reference/make_rf_good.html">envModel::make_rf_good()</a></code></td>
 <td align="left">function</td>
 <td align="left">Iteratively add trees to random forest until predictions stabilise</td>
 </tr>
-<tr class="even">
+<tr>
 <td align="left"><code><a href="reference/reduce_env.html">envModel::reduce_env()</a></code></td>
 <td align="left">function</td>
 <td align="left">Reduce number of environmental variables</td>
@@ -148,7 +148,7 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Nigel Willoughby <br><small class="roles"> Author, maintainer </small>  </li>
+<li>Nigel Willoughby <br><small class="roles"> Author, maintainer </small>   </li>
 </ul>
 </div>
 
@@ -163,7 +163,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>
