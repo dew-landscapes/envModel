@@ -84,6 +84,7 @@ list with elements itemize
 ## Examples
 
 ``` r
+
 # env variables, presence and background points code from:
 # https://rspatial.org/sdm/3_sdm_absence-background.html#absence-and-background-points
 
