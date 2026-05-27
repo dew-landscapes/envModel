@@ -46,6 +46,9 @@
     df <- df |>
       dplyr::select(any_of(context),!!rlang::ensym(clust_col)) |>
       dplyr::inner_join(df_env |>
+                          dplyr::select(tidyselect::any_of(context)
+                                        , tidyselect::any_of(env_cols)
+                                        ) |>
                           na.omit()
                         )
 
@@ -56,6 +59,9 @@
                       , !!rlang::ensym(clust_col) := !!rlang::ensym(add_clust_col)
                       ) |>
         dplyr::inner_join(add_env |>
+                            dplyr::select(tidyselect::any_of(context)
+                                          , tidyselect::any_of(env_cols)
+                                          ) |>
                             na.omit()
                           )
 
