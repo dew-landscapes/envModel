@@ -43,17 +43,21 @@ make_env_corr <- function(env_df
               , remove = remove
               )
 
-  res$remove_env <- names(env_df[sapply(env_df, function(v) var(v, na.rm=TRUE)==0)])
+  dat_check <- env_df %>%
+    dplyr::select(tidyselect::any_of(env_cols))
 
-  res$env_corr <- env_df %>%
-    dplyr::select(tidyselect::any_of(env_cols)) %>%
-    dplyr::select(!tidyselect::any_of(res$remove_env)) %>%
+  res$remove_near_zero_var <- names(dat_check)[caret::nearZeroVar(dat_check)]
+
+  dat_check <- dat_check |>
+    dplyr::select(! res$remove_near_zero_var)
+
+  res$env_corr <- dat_check |>
     stats::cor(use = "complete.obs")
 
   if(dim(res$env_corr)[2]) {
 
-    res$highly_corr <- caret::findCorrelation(res$env_corr[!rownames(res$env_corr) %in% res$remove_env
-                                                           ,!colnames(res$env_corr) %in% res$remove_env
+    res$highly_corr <- caret::findCorrelation(res$env_corr[!rownames(res$env_corr) %in% res$remove_near_zero_var
+                                                           ,!colnames(res$env_corr) %in% res$remove_near_zero_var
                                                            ]
                                              , cutoff = thresh
                                              , names = TRUE
@@ -61,8 +65,7 @@ make_env_corr <- function(env_df
 
     if(remove) {
 
-      res$remove_env <- res$highly_corr %>%
-        c(res$remove_env, ., always_remove)
+      res$remove_env <- c(always_remove, res$remove_near_zero_var, res$highly_corr)
 
       res$remove_env <- res$remove_env[!res$remove_env %in% always_keep]
 
@@ -70,7 +73,7 @@ make_env_corr <- function(env_df
 
     } else {
 
-      res$remove_env <- c(res$remove_env, always_remove)
+      res$remove_env <- c(res$remove_near_zero_var, always_remove)
 
     }
 
