@@ -80,7 +80,7 @@ reduce_env <- function(env_df
     caret::nearZeroVar(saveMetrics = TRUE) |>
     tibble::as_tibble(rownames = "env")
 
-  res$remove_constant <- check_zero_var$env[check_zero_var$nzv]
+  res$remove_constant <- res$check_low_var$env[res$check_low_var$nzv]
 
   res$env_corr <- env_df %>%
       dplyr::select(tidyselect::any_of(env_cols)) %>%
