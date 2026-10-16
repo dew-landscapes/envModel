@@ -49,12 +49,9 @@ make_rf_diagnostics(
 
   Logical or numeric. If TRUE, the `sample.fraction` argument to
   `ranger::ranger()` is set to the minimum number of sites in any one
-  cluster divided by the total number of sites. If numeric, the
-  `sample.fraction` argument varies per cluster as
-  `down_sample / n_sites` where `n_sites` is the number of sites in that
-  cluster. In cases where any element is greater than 1, it is set to 1.
-  If `FALSE` the default `down_sample` argument of `ranger::ranger()` is
-  used.
+  cluster divided by the number of sites in each cluster. If numeric, it
+  is provided as-is to the `sample.fraction` argument. If `FALSE` the
+  default `down_sample` argument of `ranger::ranger()` is used.
 
 - range_m:
 
