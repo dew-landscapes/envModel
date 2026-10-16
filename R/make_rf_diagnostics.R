@@ -11,10 +11,8 @@
 #' classification forest using `ranger::ranger()` from package ranger).
 #' @param down_sample Logical or numeric. If TRUE, the `sample.fraction`
 #' argument to `ranger::ranger()` is set to the minimum number of sites in any
-#' one cluster divided by the total number of sites. If numeric, the
-#' `sample.fraction` argument varies per cluster as `down_sample / n_sites`
-#' where `n_sites` is the number of sites in that cluster. In cases where any
-#' element is greater than 1, it is set to 1. If `FALSE` the default
+#' one cluster divided by the number of sites in each cluster. If numeric, it is
+#' provided as-is to the `sample.fraction` argument. If `FALSE` the default
 #' `down_sample` argument of `ranger::ranger()` is used.
 #' @param range_m Numeric. The distance in metres (regardless of the unit
 #' of the reference system of the input data) for block size(s) if using
@@ -66,13 +64,15 @@ make_rf_diagnostics <- function(env_df
   # samp prop -------
   samp_prop <- if(isTRUE(down_sample)) {
 
-      min(table(env_df_use[[clust_col]])) / nrow(env_df_use)
+      min(table(env_df_use[[clust_col]])) / table(env_df_use[[clust_col]])
 
     } else if(is.numeric(down_sample)) {
 
-      d <- down_sample / table(env_df_use[[clust_col]])
+      stopifnot(length(down_sample) == length(levels(env_df_use[[clust_col]])))
 
-      as.vector(ifelse(d > 1, 1, d))
+      stopifnot(sum(down_sample > 1 | down_sample < 0) == 0)
+
+      down_sample
 
     } else if(isFALSE(down_sample)) {
 
