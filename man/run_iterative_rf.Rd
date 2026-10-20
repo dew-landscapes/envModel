@@ -14,14 +14,16 @@ run_iterative_rf(
   rf_cores = 1,
   use_mtry = NULL,
   set_min = FALSE,
-  accept_delta = 0.005,
-  accept_run = 3,
+  stopping_metric = "pred_delta",
+  stopping_delta = 0.005,
+  stopping_runs = 3,
   internal_metrics = TRUE,
   do_imp = FALSE,
   keep_rf = FALSE,
   out_file = NULL,
   do_gc = TRUE,
   force_new = FALSE,
+  verbose = base::interactive(),
   ...
 )
 }
@@ -48,9 +50,12 @@ with a tune grid of \verb{.mtry = 1:floor(sqrt(length(env_names))}.}
 \item{set_min}{FALSE or numeric. If numeric, classes in \code{clust_col} with less
 than \code{set_min} rows will be filtered}
 
-\item{accept_delta}{What proportion change between runs is acceptable?}
+\item{stopping_metric}{Character. Either "delta_pred" or any metric returned
+by a summary of \code{yardstick::conf_mat()}}
 
-\item{accept_run}{How many runs (in a row) need to beat \code{accept_delta}?}
+\item{stopping_delta}{What proportion change between runs is acceptable?}
+
+\item{stopping_runs}{How many runs (in a row) need to beat \code{stopping_delta}?}
 
 \item{internal_metrics}{TRUE or test data in same format as \code{env_df}.}
 
