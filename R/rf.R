@@ -227,7 +227,6 @@ run_iterative_rf <- function(env_df
     counter <- 0
 
     message("Initial forest trees: ", rf_good$rf_res$trees[[nrow(rf_good$rf_res)]]
-            , "\n ", use_metric, ": ", round(rf_good$rf_res[[use_metric]][[nrow(rf_good$rf_res)]], 4)
             , "\n elapsed time: ", as.numeric(round(difftime(Sys.time(), go_time, units = "secs"),2)), " seconds\n\n"
             )
 
@@ -276,7 +275,6 @@ run_iterative_rf <- function(env_df
 
       message("Combined forest trees: ", rf_good$rf_res$trees[[nrow(rf_good$rf_res)]]
               , "\n counter on: ", counter, " (Stop at ",accept_run,")"
-              , "\n ", use_metric, ": ", round(rf_good$rf_res[[use_metric]][[nrow(rf_good$rf_res)]], 4)
               , "\n changed predictions: ", paste0(round(100 * rf_good$rf_res$pred_delta[nrow(rf_good$rf_res)], 3), "%")
               , "\n elapsed time: ", as.numeric(round(difftime(Sys.time(), go_time, units = "secs"),2)), " seconds\n\n"
               )
