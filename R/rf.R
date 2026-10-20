@@ -119,7 +119,7 @@ run_iterative_rf <- function(env_df
 
   }
 
-  if(all(file.exists(out_file), !force_new)) {
+  if(all(!is.null(out_file) && file.exists(out_file), !force_new)) {
 
     rf_good <- rio::import(out_file)
 
