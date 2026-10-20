@@ -39,5 +39,5 @@ The following functions and data sets are provided in `envModel`.
 | `envModel::make_rf_diagnostics()` | function | Run random forest, returning only diagnostic values. |
 | `envModel::make_rf_diagnostics_old()` | function | Run random forest, usually returning only diagnostic values. |
 | `envModel::make_rf_diagnostics_spatialcv()` | function | Run random forest, returning only diagnostic values from spatial cross |
-| `envModel::make_rf_good()` | function | Iteratively add trees to random forest until predictions stabilise |
 | `envModel::reduce_env()` | function | Reduce number of environmental variables |
+| `envModel::run_iterative_rf()` | function | Iteratively add trees to random forest |
