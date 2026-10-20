@@ -69,8 +69,10 @@ make_rf_quick <- function(x_df
 #' with a tune grid of `.mtry = 1:floor(sqrt(length(env_names))`.
 #' @param set_min FALSE or numeric. If numeric, classes in `clust_col` with less
 #' than `set_min` rows will be filtered
-#' @param accept_delta What proportion change between runs is acceptable?
-#' @param accept_run How many runs (in a row) need to beat `accept_delta`?
+#' @param stopping_metric Character. Either "delta_pred" or any metric returned
+#' by a summary of `yardstick::conf_mat()`
+#' @param stopping_delta What proportion change between runs is acceptable?
+#' @param stopping_runs How many runs (in a row) need to beat `stopping_delta`?
 #' @param internal_metrics TRUE or test data in same format as `env_df`.
 #' @param do_imp Logical. Passed to `importance` argument of
 #' `randomForest::randomForest()`.
@@ -96,14 +98,16 @@ run_iterative_rf <- function(env_df
                              , rf_cores = 1
                              , use_mtry = NULL
                              , set_min = FALSE
-                             , accept_delta = 0.005
-                             , accept_run = 3
+                             , stopping_metric = "pred_delta"
+                             , stopping_delta = 0.005
+                             , stopping_runs = 3
                              , internal_metrics = TRUE
                              , do_imp = FALSE
                              , keep_rf = FALSE
                              , out_file = NULL
                              , do_gc = TRUE
                              , force_new = FALSE
+                             , verbose = base::interactive()
                              , ...
                              ) {
 
@@ -121,7 +125,7 @@ run_iterative_rf <- function(env_df
 
   if(all(!is.null(out_file) && file.exists(out_file), !force_new)) {
 
-    rf_good <- rio::import(out_file)
+    result <- rio::import(out_file)
 
   } else {
 
@@ -138,7 +142,7 @@ run_iterative_rf <- function(env_df
     x <- env_df[,which(names(env_df) %in% env_names)]
     y <- factor(env_df[clust_col][[1]])
 
-    rf_good <- list()
+    result <- list()
 
     # setup parallel cluster
     if(rf_cores > 1) {
@@ -162,9 +166,9 @@ run_iterative_rf <- function(env_df
       # Tuning grid
       c_tune_grid <- expand.grid(.mtry = 1:floor(sqrt(length(env_names))))
 
-      message("Find best mtry from: ", min(c_tune_grid$.mtry), " to ", max(c_tune_grid$.mtry))
+      if(verbose) message("Find best mtry from: ", min(c_tune_grid$.mtry), " to ", max(c_tune_grid$.mtry))
 
-      rf_good$mtry <- caret::train(x
+      result$mtry <- caret::train(x
                                    , y
                                    , method = "rf"
                                    , trControl = ctrl
@@ -173,11 +177,11 @@ run_iterative_rf <- function(env_df
                                    , trace = FALSE
                                    )
 
-      rf_good$mtry <- rf_good$mtry %>%
+      result$mtry <- result$mtry %>%
         `[[` ("finalModel") %>%
         `[[` ("mtry")
 
-      } else rf_good$mtry <- use_mtry
+      } else result$mtry <- use_mtry
 
 
     get_truth_pred <- function(int_met, rf) {
@@ -206,7 +210,7 @@ run_iterative_rf <- function(env_df
                         , y
                         , trees = trees_start
                         , if(rf_cores > 1) cl_obj = cl
-                        , use_mtry = rf_good$mtry
+                        , use_mtry = result$mtry
                         , do_imp = .do_imp
                         , ...
                         )
@@ -216,9 +220,9 @@ run_iterative_rf <- function(env_df
                                                )
                                 )
 
-    if(keep_rf) rf_good$rf <- rf
+    if(keep_rf) result$rf <- rf
 
-    rf_good$rf_res <- tibble::tibble(trees = rf$ntree) |>
+    result$rf_res <- tibble::tibble(trees = rf$ntree) |>
       dplyr::mutate(metrics = list(metrics)
                     , pred_delta = NA
                     ) |>
@@ -226,13 +230,17 @@ run_iterative_rf <- function(env_df
 
     counter <- 0
 
-    message("Initial forest trees: ", rf_good$rf_res$trees[[nrow(rf_good$rf_res)]]
-            , "\n elapsed time: ", as.numeric(round(difftime(Sys.time(), go_time, units = "secs"),2)), " seconds\n\n"
-            )
+    if(verbose) {
+
+      message("Initial forest trees: ", result$rf_res$trees[[nrow(result$rf_res)]]
+              , "\n elapsed time: ", as.numeric(round(difftime(Sys.time(), go_time, units = "secs"),2)), " seconds\n\n"
+              )
+
+    }
 
     while(
-      all(counter < accept_run
-          , rf_good$rf_res$trees[[nrow(rf_good$rf_res)]] < trees_max
+      all(counter < stopping_runs
+          , result$rf_res$trees[[nrow(result$rf_res)]] < trees_max
           )
       ) {
 
@@ -242,7 +250,7 @@ run_iterative_rf <- function(env_df
                                , y
                                , trees = trees_add
                                , if(rf_cores > 1) cl_obj = cl
-                               , use_mtry = rf_good$mtry
+                               , use_mtry = result$mtry
                                , do_imp = .do_imp
                                , ...
                                )
@@ -256,9 +264,9 @@ run_iterative_rf <- function(env_df
 
       pred_delta <- sum(old_rf$predicted != rf$predicted) / length(y)
 
-      if(keep_rf) rf_good$rf <- rf
+      if(keep_rf) result$rf <- rf
 
-      rf_good$rf_res <- rf_good$rf_res |>
+      result$rf_res <- result$rf_res |>
         dplyr::bind_rows(tibble::tibble(trees = rf$ntree) |>
                            dplyr::mutate(metrics = list(metrics)
                                          , pred_delta = pred_delta
@@ -266,30 +274,35 @@ run_iterative_rf <- function(env_df
                            tidyr::unnest(cols = c(metrics))
                          )
 
-      counter <- if(pred_delta <= accept_delta) {
+      metric_delta <- abs(tail(result$rf_res[[stopping_metric]], 1) - tail(result$rf_res[[stopping_metric]], 2)[1])
+
+      counter <- if(isTRUE(metric_delta <= stopping_delta)) {
 
         counter + 1
 
         } else 0
 
+      if(verbose) {
 
-      message("Combined forest trees: ", rf_good$rf_res$trees[[nrow(rf_good$rf_res)]]
-              , "\n counter on: ", counter, " (Stop at ",accept_run,")"
-              , "\n changed predictions: ", paste0(round(100 * rf_good$rf_res$pred_delta[nrow(rf_good$rf_res)], 3), "%")
-              , "\n elapsed time: ", as.numeric(round(difftime(Sys.time(), go_time, units = "secs"),2)), " seconds\n\n"
-              )
+        message("Combined forest trees: ", result$rf_res$trees[[nrow(result$rf_res)]]
+                , "\n counter on: ", counter, " (Stop at ",stopping_runs,")"
+                , "\n change in ", stopping_metric, " between runs: ", round(metric_delta, 5)
+                , "\n elapsed time: ", as.numeric(round(difftime(Sys.time(), go_time, units = "secs"),2)), " seconds\n\n"
+                )
+
+      }
 
     }
 
-    rf_good$testing <- if(isTRUE(internal_metrics)) "internal" else "new data"
+    result$testing <- if(isTRUE(internal_metrics)) "internal" else "new data"
 
-    rf_good$seconds <- round(as.numeric(difftime(Sys.time(), go_time, units = "secs")),2)
+    result$seconds <- round(as.numeric(difftime(Sys.time(), go_time, units = "secs")),2)
 
-    if(!isTRUE(is.null(out_file))) saveRDS(rf_good, out_file)
+    if(!isTRUE(is.null(out_file))) saveRDS(result, out_file)
 
   }
 
-  return(rf_good)
+  return(result)
 
 }
 
