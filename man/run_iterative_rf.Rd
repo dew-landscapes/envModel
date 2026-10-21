@@ -21,7 +21,6 @@ run_iterative_rf(
   do_imp = FALSE,
   keep_rf = FALSE,
   out_file = NULL,
-  do_gc = TRUE,
   force_new = FALSE,
   verbose = base::interactive(),
   ...
@@ -66,9 +65,6 @@ by a summary of \code{yardstick::conf_mat()}}
 output. Defaults to \code{FALSE} to save memory.}
 
 \item{out_file}{Optional name (and path) of file to save results}
-
-\item{do_gc}{Logical. Run \code{gc()} when results are available and all other
-objects have been removed.}
 
 \item{force_new}{Logical. If \code{out_file} already exists, should that file be
 loaded (\code{FALSE}) or run again (\code{TRUE}) from scratch (and written over).}
