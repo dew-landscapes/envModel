@@ -14,10 +14,10 @@ run_iterative_rf(
   rf_cores = 1,
   use_mtry = NULL,
   set_min = FALSE,
-  stopping_metric = "pred_delta",
+  stopping_metric = "changed_pred",
   stopping_delta = 0.005,
   stopping_runs = 3,
-  internal_metrics = TRUE,
+  test_data = FALSE,
   do_imp = FALSE,
   keep_rf = FALSE,
   out_file = NULL,
@@ -49,14 +49,16 @@ with a tune grid of \verb{.mtry = 1:floor(sqrt(length(env_names))}.}
 \item{set_min}{FALSE or numeric. If numeric, classes in \code{clust_col} with less
 than \code{set_min} rows will be filtered}
 
-\item{stopping_metric}{Character. Either "delta_pred" or any metric returned
-by a summary of \code{yardstick::conf_mat()}}
+\item{stopping_metric}{Character. Either "changed_pred" (proportion of
+predictions that change between runs) or any metric returned by a summary of
+\code{yardstick::conf_mat()}}
 
 \item{stopping_delta}{What proportion change between runs is acceptable?}
 
 \item{stopping_runs}{How many runs (in a row) need to beat \code{stopping_delta}?}
 
-\item{internal_metrics}{TRUE or test data in same format as \code{env_df}.}
+\item{test_data}{Either \code{FALSE} to test against the training data, or new
+data in same format as \code{env_df}, against which to calculate metrics.}
 
 \item{do_imp}{Logical. Passed to \code{importance} argument of
 \code{randomForest::randomForest()}.}
