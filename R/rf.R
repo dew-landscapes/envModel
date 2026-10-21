@@ -69,11 +69,13 @@ make_rf_quick <- function(x_df
 #' with a tune grid of `.mtry = 1:floor(sqrt(length(env_names))`.
 #' @param set_min FALSE or numeric. If numeric, classes in `clust_col` with less
 #' than `set_min` rows will be filtered
-#' @param stopping_metric Character. Either "delta_pred" or any metric returned
-#' by a summary of `yardstick::conf_mat()`
+#' @param stopping_metric Character. Either "changed_pred" (proportion of
+#' predictions that change between runs) or any metric returned by a summary of
+#' `yardstick::conf_mat()`
 #' @param stopping_delta What proportion change between runs is acceptable?
 #' @param stopping_runs How many runs (in a row) need to beat `stopping_delta`?
-#' @param internal_metrics TRUE or test data in same format as `env_df`.
+#' @param test_data Either `FALSE` to test against the training data, or new
+#' data in same format as `env_df`, against which to calculate metrics.
 #' @param do_imp Logical. Passed to `importance` argument of
 #' `randomForest::randomForest()`.
 #' @param keep_rf Logical. If true, `randomForest` object will be included in
@@ -96,10 +98,10 @@ run_iterative_rf <- function(env_df
                              , rf_cores = 1
                              , use_mtry = NULL
                              , set_min = FALSE
-                             , stopping_metric = "pred_delta"
+                             , stopping_metric = "changed_pred"
                              , stopping_delta = 0.005
                              , stopping_runs = 3
-                             , internal_metrics = TRUE
+                             , test_data = FALSE
                              , do_imp = FALSE
                              , keep_rf = FALSE
                              , out_file = NULL
@@ -181,9 +183,9 @@ run_iterative_rf <- function(env_df
       } else result$mtry <- use_mtry
 
 
-    get_truth_pred <- function(int_met, rf) {
+    get_truth_pred <- function(test, rf) {
 
-      if(isTRUE(int_met)) {
+      if(isFALSE(test)) {
 
         truth <- y
         pred <- rf$predicted
@@ -191,15 +193,15 @@ run_iterative_rf <- function(env_df
 
       } else {
 
-        new_data <- int_met[, env_names]
+        new_data <- test[, env_names]
 
-        truth <- int_met[clust_col][[1]]
+        truth <- test[[clust_col]]
 
         pred <- predict(rf, newdata = new_data)
 
       }
 
-      tibble::tibble(truth,pred)
+      tibble::tibble(truth, pred)
 
     }
 
@@ -212,7 +214,7 @@ run_iterative_rf <- function(env_df
                         , ...
                         )
 
-    metrics <- get_conf_metrics(get_truth_pred(internal_metrics
+    metrics <- get_conf_metrics(get_truth_pred(test_data
                                                , rf
                                                )
                                 )
@@ -221,7 +223,7 @@ run_iterative_rf <- function(env_df
 
     result$rf_res <- tibble::tibble(trees = rf$ntree) |>
       dplyr::mutate(metrics = list(metrics)
-                    , pred_delta = NA
+                    , changed_pred = NA
                     ) |>
       tidyr::unnest(cols = c(metrics))
 
@@ -254,12 +256,12 @@ run_iterative_rf <- function(env_df
 
       rf <- randomForest::combine(rf, next_rf)
 
-      metrics <- get_conf_metrics(get_truth_pred(internal_metrics
+      metrics <- get_conf_metrics(get_truth_pred(test_data
                                                   , rf
                                                   )
                                    )
 
-      pred_delta <- sum(old_rf$predicted != rf$predicted) / length(y)
+      changed_pred <- sum(old_rf$predicted != rf$predicted) / length(y)
 
       if(keep_rf) result$rf <- rf
 
@@ -268,7 +270,7 @@ run_iterative_rf <- function(env_df
       result$rf_res <- result$rf_res |>
         dplyr::bind_rows(tibble::tibble(trees = rf$ntree) |>
                            dplyr::mutate(metrics = list(metrics)
-                                         , pred_delta = pred_delta
+                                         , changed_pred = changed_pred
                                          ) |>
                            tidyr::unnest(cols = c(metrics))
                          ) |>
@@ -294,7 +296,7 @@ run_iterative_rf <- function(env_df
 
     }
 
-    result$testing <- if(isTRUE(internal_metrics)) "internal" else "new data"
+    result$testing <- if(isFALSE(test_data)) "internal" else "new data"
 
     result$seconds <- round(as.numeric(difftime(Sys.time(), go_time, units = "secs")),2)
 
