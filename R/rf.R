@@ -79,8 +79,6 @@ make_rf_quick <- function(x_df
 #' @param keep_rf Logical. If true, `randomForest` object will be included in
 #' output. Defaults to `FALSE` to save memory.
 #' @param out_file Optional name (and path) of file to save results
-#' @param do_gc Logical. Run `gc()` when results are available and all other
-#' objects have been removed.
 #' @param force_new Logical. If `out_file` already exists, should that file be
 #' loaded (`FALSE`) or run again (`TRUE`) from scratch (and written over).
 #' @param ... Passed (via `make_rf_quick()`) to `randomForest::randomForest()`.
@@ -105,7 +103,6 @@ run_iterative_rf <- function(env_df
                              , do_imp = FALSE
                              , keep_rf = FALSE
                              , out_file = NULL
-                             , do_gc = TRUE
                              , force_new = FALSE
                              , verbose = base::interactive()
                              , ...
@@ -266,17 +263,20 @@ run_iterative_rf <- function(env_df
 
       if(keep_rf) result$rf <- rf
 
+      metric_delta_name <- paste0(stopping_metric, "_delta")
+
       result$rf_res <- result$rf_res |>
         dplyr::bind_rows(tibble::tibble(trees = rf$ntree) |>
                            dplyr::mutate(metrics = list(metrics)
                                          , pred_delta = pred_delta
                                          ) |>
                            tidyr::unnest(cols = c(metrics))
-                         )
+                         ) |>
+        dplyr::mutate(!!rlang::ensym(metric_delta_name) := base::abs(!!rlang::ensym(stopping_metric) - dplyr::lag(!!rlang::ensym(stopping_metric)))
+                      , below_thresh = !!rlang::ensym(metric_delta_name) < stopping_delta
+                      )
 
-      metric_delta <- abs(tail(result$rf_res[[stopping_metric]], 1) - tail(result$rf_res[[stopping_metric]], 2)[1])
-
-      counter <- if(isTRUE(metric_delta <= stopping_delta)) {
+      counter <- if(isTRUE(tail(result$rf_res[[metric_delta_name]], 1) <= stopping_delta)) {
 
         counter + 1
 
@@ -286,7 +286,7 @@ run_iterative_rf <- function(env_df
 
         message("Combined forest trees: ", result$rf_res$trees[[nrow(result$rf_res)]]
                 , "\n counter on: ", counter, " (Stop at ",stopping_runs,")"
-                , "\n change in ", stopping_metric, " between runs: ", round(metric_delta, 5)
+                , "\n absolute change in ", stopping_metric, " between runs: ", round(tail(result$rf_res[[metric_delta_name]], 1), 5)
                 , "\n elapsed time: ", as.numeric(round(difftime(Sys.time(), go_time, units = "secs"),2)), " seconds\n\n"
                 )
 
