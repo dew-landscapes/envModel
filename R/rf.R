@@ -221,7 +221,7 @@ run_iterative_rf <- function(env_df
 
     if(keep_rf) result$rf <- rf
 
-    result$rf_res <- tibble::tibble(trees = rf$ntree) |>
+    result$metrics <- tibble::tibble(trees = rf$ntree) |>
       dplyr::mutate(metrics = list(metrics)
                     , changed_pred = NA
                     ) |>
@@ -231,7 +231,7 @@ run_iterative_rf <- function(env_df
 
     if(verbose) {
 
-      message("Initial forest trees: ", result$rf_res$trees[[nrow(result$rf_res)]]
+      message("Initial forest trees: ", result$metrics$trees[[nrow(result$metrics)]]
               , "\n elapsed time: ", as.numeric(round(difftime(Sys.time(), go_time, units = "secs"),2)), " seconds\n\n"
               )
 
@@ -239,7 +239,7 @@ run_iterative_rf <- function(env_df
 
     while(
       all(counter < stopping_runs
-          , result$rf_res$trees[[nrow(result$rf_res)]] < trees_max
+          , result$metrics$trees[[nrow(result$metrics)]] < trees_max
           )
       ) {
 
@@ -265,20 +265,43 @@ run_iterative_rf <- function(env_df
 
       if(keep_rf) result$rf <- rf
 
-      metric_delta_name <- paste0(stopping_metric, "_delta")
-
-      result$rf_res <- result$rf_res |>
+      result$metrics <- result$metrics |>
         dplyr::bind_rows(tibble::tibble(trees = rf$ntree) |>
-                           dplyr::mutate(metrics = list(metrics)
-                                         , changed_pred = changed_pred
-                                         ) |>
+                           dplyr::mutate(metrics = list(metrics)) |>
                            tidyr::unnest(cols = c(metrics))
-                         ) |>
-        dplyr::mutate(!!rlang::ensym(metric_delta_name) := base::abs(!!rlang::ensym(stopping_metric) - dplyr::lag(!!rlang::ensym(stopping_metric)))
-                      , below_thresh = !!rlang::ensym(metric_delta_name) < stopping_delta
+                         )
+
+      if(stopping_metric == "changed_pred") {
+
+        metric_delta_name <- "changed_pred" # metric_delta_name needed for counter and message
+
+        result$metrics$changed_pred[[nrow(result$metrics)]] <- changed_pred
+
+        result$metrics <- result$metrics |>
+          dplyr::mutate(below_thresh = changed_pred < stopping_delta)
+
+        txt <- paste0("\n changed predictions between runs: "
+                      , round(tail(result$metrics[[metric_delta_name]], 1), 5)
                       )
 
-      counter <- if(isTRUE(tail(result$rf_res[[metric_delta_name]], 1) <= stopping_delta)) {
+      } else {
+
+        metric_delta_name <- paste0(stopping_metric, "_change")
+
+        result$metrics$changed_pred[[nrow(result$metrics)]] <- changed_pred
+
+        result$metrics <- result$metrics |>
+          dplyr::mutate(!!rlang::ensym(metric_delta_name) := base::abs(!!rlang::ensym(stopping_metric) - dplyr::lag(!!rlang::ensym(stopping_metric)))
+                        , below_thresh = !!rlang::ensym(metric_delta_name) < stopping_delta
+                        )
+
+        txt <- paste0("\n absolute change in ", stopping_metric, " between runs: "
+                      , round(tail(result$metrics[[metric_delta_name]], 1), 5)
+                      )
+
+      }
+
+      counter <- if(isTRUE(tail(result$metrics[[metric_delta_name]], 1) <= stopping_delta)) {
 
         counter + 1
 
@@ -286,9 +309,9 @@ run_iterative_rf <- function(env_df
 
       if(verbose) {
 
-        message("Combined forest trees: ", result$rf_res$trees[[nrow(result$rf_res)]]
+        message("Combined forest trees: ", result$metrics$trees[[nrow(result$metrics)]]
                 , "\n counter on: ", counter, " (Stop at ",stopping_runs,")"
-                , "\n absolute change in ", stopping_metric, " between runs: ", round(tail(result$rf_res[[metric_delta_name]], 1), 5)
+                , txt
                 , "\n elapsed time: ", as.numeric(round(difftime(Sys.time(), go_time, units = "secs"),2)), " seconds\n\n"
                 )
 
