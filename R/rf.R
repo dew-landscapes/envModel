@@ -72,8 +72,9 @@ make_rf_quick <- function(x_df
 #' @param stopping_metric Character. Either "changed_pred" (proportion of
 #' predictions that change between runs) or any metric returned by a summary of
 #' `yardstick::conf_mat()`
-#' @param stopping_delta What proportion change between runs is acceptable?
-#' @param stopping_runs How many runs (in a row) need to beat `stopping_delta`?
+#' @param stopping_tolerance What proportion change between runs is acceptable?
+#' @param stopping_runs How many runs (in a row) need to beat
+#' `stopping_tolerance`?
 #' @param test_data Either `FALSE` to test against the training data, or new
 #' data in same format as `env_df`, against which to calculate metrics.
 #' @param do_imp Logical. Passed to `importance` argument of
@@ -98,8 +99,8 @@ run_iterative_rf <- function(env_df
                              , rf_cores = 1
                              , use_mtry = NULL
                              , set_min = FALSE
-                             , stopping_metric = "changed_pred"
-                             , stopping_delta = 0.005
+                             , stopping_metric = "f_meas"
+                             , stopping_tolerance = 0.005
                              , stopping_runs = 3
                              , test_data = FALSE
                              , do_imp = FALSE
@@ -224,7 +225,6 @@ run_iterative_rf <- function(env_df
     result$metrics <- tibble::tibble(trees = rf$ntree) |>
       dplyr::mutate(metrics = list(metrics)
                     , changed_pred = NA
-                    , below_thresh = NA
                     ) |>
       tidyr::unnest(cols = c(metrics))
 
@@ -239,7 +239,7 @@ run_iterative_rf <- function(env_df
     }
 
     while(
-      all(counter < stopping_runs
+      all(counter == 0
           , result$metrics$trees[[nrow(result$metrics)]] < trees_max
           )
       ) {
@@ -262,8 +262,6 @@ run_iterative_rf <- function(env_df
                                                   )
                                    )
 
-      changed_pred <- sum(old_rf$predicted != rf$predicted) / length(y)
-
       if(keep_rf) result$rf <- rf
 
       result$metrics <- result$metrics |>
@@ -272,52 +270,47 @@ run_iterative_rf <- function(env_df
                            tidyr::unnest(cols = c(metrics))
                          )
 
-      if(stopping_metric == "changed_pred") {
+      # add in latest 'changed_pred'
+      result$metrics$changed_pred[nrow(result$metrics)] <- sum(old_rf$predicted != rf$predicted) / length(y)
 
-        metric_delta_name <- "changed_pred" # metric_delta_name needed for counter and message
+      # running mean on stopping metric
+      mean_name <- paste0(stopping_metric, "_run_mean")
+      max_name <- paste0(stopping_metric, "_run_max")
+      test_name <- paste0(stopping_metric, "_test")
 
-        result$metrics$changed_pred[[nrow(result$metrics)]] <- changed_pred
-
-        result$metrics$below_thresh[[nrow(result$metrics)]] <- changed_pred < stopping_delta
-
-        txt <- paste0("\n changed predictions between runs: "
-                      , round(tail(result$metrics[[metric_delta_name]], 1), 5)
+      result$metrics <- result$metrics |>
+        dplyr::mutate(!!rlang::ensym(mean_name) := slider::slide_dbl(result$metrics[[stopping_metric]]
+                                                                    , mean
+                                                                    , .before = stopping_runs - 1
+                                                                    , .complete = TRUE
+                                                                    )
+                      , !!rlang::ensym(max_name) := slider::slide_dbl(result$metrics[[stopping_metric]]
+                                                                      , max
+                                                                      , .before = stopping_runs - 1
+                                                                      , .complete = TRUE
+                                                                      )
+                      , !!rlang::ensym(test_name) := !!rlang::ensym(max_name) / !!rlang::ensym(mean_name)
+                      , thresh = !!rlang::ensym(test_name) <= 1 + stopping_tolerance
                       )
 
-      } else {
-
-        metric_delta_name <- paste0(stopping_metric, "_change")
-
-        result$metrics$changed_pred[[nrow(result$metrics)]] <- changed_pred
-
-        result$metrics <- result$metrics |>
-          dplyr::mutate(!!rlang::ensym(metric_delta_name) := base::abs(!!rlang::ensym(stopping_metric) - dplyr::lag(!!rlang::ensym(stopping_metric)))
-                        , below_thresh = !!rlang::ensym(metric_delta_name) < stopping_delta
-                        )
-
-        txt <- paste0("\n absolute change in ", stopping_metric, " between runs: "
-                      , round(tail(result$metrics[[metric_delta_name]], 1), 5)
-                      )
-
-      }
-
-      counter <- if(isTRUE(tail(result$metrics[[metric_delta_name]], 1) <= stopping_delta)) {
-
-        counter + 1
-
-        } else 0
+      if(isTRUE(result$metrics$thresh[nrow(result$metrics)])) counter <- counter + 1
 
       if(verbose) {
 
-        message("Combined forest trees: ", result$metrics$trees[[nrow(result$metrics)]]
-                , "\n counter on: ", counter, " (Stop at ",stopping_runs,")"
-                , txt
-                , "\n elapsed time: ", as.numeric(round(difftime(Sys.time(), go_time, units = "secs"),2)), " seconds\n\n"
+        message("Combined forest trees: ", rf$ntree
+                , "\n ", stopping_metric, ": ", round(tail(result$metrics[[stopping_metric]], 1), 5)
+                , "\n running mean of ", stopping_metric, " over ", stopping_runs, " runs: ", round(tail(result$metrics[[mean_name]], 1), 5)
+                , "\n running max of ", stopping_metric, " over ", stopping_runs, " runs: ", round(tail(result$metrics[[max_name]], 1), 5)
+                , "\n stop when thresh (running max ", stopping_metric, " / running mean ", stopping_metric, "): ", round(tail(result$metrics[[test_name]], 1), 5)
+                , " < ", 1 + stopping_tolerance
+                , "\n elapsed time: ", as.numeric(round(difftime(Sys.time(), go_time, units = "secs"), 2)), " seconds\n"
                 )
 
       }
 
     }
+
+    if(! result$metrics$thresh[[nrow(result$metrics)]]) warning(rf$ntree, " > ", trees_max, " stopping without meeting stopping rules")
 
     result$testing <- if(isFALSE(test_data)) "internal" else "new data"
 
