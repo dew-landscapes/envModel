@@ -51,8 +51,8 @@ reached.</p>
 <span>  rf_cores <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  use_mtry <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  set_min <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  stopping_metric <span class="op">=</span> <span class="st">"changed_pred"</span>,</span>
-<span>  stopping_delta <span class="op">=</span> <span class="fl">0.005</span>,</span>
+<span>  stopping_metric <span class="op">=</span> <span class="st">"f_meas"</span>,</span>
+<span>  stopping_tolerance <span class="op">=</span> <span class="fl">0.005</span>,</span>
 <span>  stopping_runs <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  test_data <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  do_imp <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -114,12 +114,13 @@ predictions that change between runs) or any metric returned by a summary of
 <code><a href="https://yardstick.tidymodels.org/reference/conf_mat.html" class="external-link">yardstick::conf_mat()</a></code></p></dd>
 
 
-<dt id="arg-stopping-delta">stopping_delta<a class="anchor" aria-label="anchor" href="#arg-stopping-delta"></a></dt>
+<dt id="arg-stopping-tolerance">stopping_tolerance<a class="anchor" aria-label="anchor" href="#arg-stopping-tolerance"></a></dt>
 <dd><p>What proportion change between runs is acceptable?</p></dd>
 
 
 <dt id="arg-stopping-runs">stopping_runs<a class="anchor" aria-label="anchor" href="#arg-stopping-runs"></a></dt>
-<dd><p>How many runs (in a row) need to beat <code>stopping_delta</code>?</p></dd>
+<dd><p>How many runs (in a row) need to beat
+<code>stopping_tolerance</code>?</p></dd>
 
 
 <dt id="arg-test-data">test_data<a class="anchor" aria-label="anchor" href="#arg-test-data"></a></dt>

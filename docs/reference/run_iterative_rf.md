@@ -16,8 +16,8 @@ run_iterative_rf(
   rf_cores = 1,
   use_mtry = NULL,
   set_min = FALSE,
-  stopping_metric = "changed_pred",
-  stopping_delta = 0.005,
+  stopping_metric = "f_meas",
+  stopping_tolerance = 0.005,
   stopping_runs = 3,
   test_data = FALSE,
   do_imp = FALSE,
@@ -79,13 +79,13 @@ run_iterative_rf(
   change between runs) or any metric returned by a summary of
   [`yardstick::conf_mat()`](https://yardstick.tidymodels.org/reference/conf_mat.html)
 
-- stopping_delta:
+- stopping_tolerance:
 
   What proportion change between runs is acceptable?
 
 - stopping_runs:
 
-  How many runs (in a row) need to beat `stopping_delta`?
+  How many runs (in a row) need to beat `stopping_tolerance`?
 
 - test_data:
 

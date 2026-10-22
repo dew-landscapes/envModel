@@ -14,8 +14,8 @@ run_iterative_rf(
   rf_cores = 1,
   use_mtry = NULL,
   set_min = FALSE,
-  stopping_metric = "changed_pred",
-  stopping_delta = 0.005,
+  stopping_metric = "f_meas",
+  stopping_tolerance = 0.005,
   stopping_runs = 3,
   test_data = FALSE,
   do_imp = FALSE,
@@ -53,9 +53,10 @@ than \code{set_min} rows will be filtered}
 predictions that change between runs) or any metric returned by a summary of
 \code{yardstick::conf_mat()}}
 
-\item{stopping_delta}{What proportion change between runs is acceptable?}
+\item{stopping_tolerance}{What proportion change between runs is acceptable?}
 
-\item{stopping_runs}{How many runs (in a row) need to beat \code{stopping_delta}?}
+\item{stopping_runs}{How many runs (in a row) need to beat
+\code{stopping_tolerance}?}
 
 \item{test_data}{Either \code{FALSE} to test against the training data, or new
 data in same format as \code{env_df}, against which to calculate metrics.}
