@@ -224,6 +224,7 @@ run_iterative_rf <- function(env_df
     result$metrics <- tibble::tibble(trees = rf$ntree) |>
       dplyr::mutate(metrics = list(metrics)
                     , changed_pred = NA
+                    , below_thresh = NA
                     ) |>
       tidyr::unnest(cols = c(metrics))
 
@@ -277,8 +278,7 @@ run_iterative_rf <- function(env_df
 
         result$metrics$changed_pred[[nrow(result$metrics)]] <- changed_pred
 
-        result$metrics <- result$metrics |>
-          dplyr::mutate(below_thresh = changed_pred < stopping_delta)
+        result$metrics$below_thresh[[nrow(result$metrics)]] <- changed_pred < stopping_delta
 
         txt <- paste0("\n changed predictions between runs: "
                       , round(tail(result$metrics[[metric_delta_name]], 1), 5)
