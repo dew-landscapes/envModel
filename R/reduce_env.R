@@ -1,30 +1,19 @@
 
 #' Reduce number of environmental variables
 #'
-#' Given a data frame of environmental variables, flag correlated, and/or
-#' important variables as precursor to further analysis. Importance is taken
-#' from the variable importance result of `randomForest::randomForest()`. Thus
-#' it is not deterministic and can vary between runs.
+#' Given a data frame of environmental data flag variables that: are correlated;
+#' have near-zero variance; and have a high proportion of `NA` values.
 #'
-#' @param env_df Dataframe with environmental variables
-#' @param env_cols Numeric or character vector defining columns in env_df
+#' @param env_data Dataframe with environmental variables
+#' @param env_cols Numeric or character vector defining columns in `env_data`
 #' that contain the variables to test for correlation. Correlation is found via
 #' [caret::findCorrelation()].
-#' @param y_col Character. Name of a column in `env_df` to test for
-#' 'important' variables via `randomForest::randomForest()`. Not used if
-#' `quant_rf_imp` is `NULL`.
-#' @param y_col_factor Logical. Should `y_col` be considered a
-#' factor in `randomForest::randomForest()`? Thus classification rather than
-#' regression. Not used if `quant_rf_imp` is `NULL`.
-#' @param imp_col Character. Name of column in result of call to
-#' `randomForest::importance()` to use in deciding 'importance' of a variable.
-#' Not used if `quant_rf_imp` is `NULL`.
 #' @param thresh_corr Numeric or `NULL`. Threshold correlation value above which
 #' a variable is flagged as correlated. Set to `NULL` to skip removal of
 #' any correlated variables.
-#' @param quant_rf_imp Numeric. Quantile below which a variable is flagged as
-#' not important. Set to `NULL` to skip removal of variables with low random
-#' forest importance.
+#' @param thresh_NA Numeric or `NULL`. Threshold proportion of `NA` values
+#' within a variable before it is removed. i.e. with a `thresh_NA` value of 0.1,
+#' a variable with more than 10% `NA` values would be flagged for removal.
 #' @param remove_always Character. Any matches will always be removed (even if
 #' not correlated).
 #' @param keep_always Character vector. Any string in this vector, if matched,
@@ -35,92 +24,60 @@
 #'  \item{env_cols}{as provided}
 #'  \item{remove_always}{as provided}
 #'  \item{keep_always}{as provided}
-#'  \item{remove_constant}{columns with only one value}
-#'  \item{env_corr}{result of applying [stats::cor()] to `env_df[,env_cols]`}
-#'  \item{remove_corr}{column names in `env_df` that are correlated with another
+#'  \item{remove_constant}{columns with only one value (or near-zero variance)}
+#'  \item{env_corr}{result of applying [stats::cor()] to `env_data[,env_cols]`}
+#'  \item{remove_corr}{column names in `env_data` that are correlated with another
 #'  column above `thresh_corr`.}
-#'  \item{rf}{result of applying `randomforest::randomforest()` in the form of
-#'  y_col ~ env_cols}
-#'  \item{rf_vi}{variable importance from rf}
+#'  \item{test_na}{tibble of results of testing each column for `NA` values}
+#'  \item{remove_NA}{character vector of columns to remove as their proportion
+#'  of `NA` values > `thresh_NA`}
 #'  \item{remove}{character vector of columns to remove from further
 #'  analysis, based on results from `reduce_env()`}
+#'  \item{keep}{character vector of `env_cols` that are not in `remove`}
 #' }
 #' @export
 #'
 #' @example inst/examples/reduce_env_ex.R
-reduce_env <- function(env_df
+reduce_env <- function(env_data
                        , env_cols
-                       , y_col = "pa"
-                       , y_col_factor = TRUE
-                       , imp_col = "1"
                        , thresh_corr = 0.90
-                       , quant_rf_imp = NULL
-                       , remove_always = c("lat", "long")
+                       , thresh_NA = 0.03
+                       , remove_always = c("lat", "long", "^id$")
                        , keep_always = NULL
                        ) {
 
-  if(!is.character(env_cols)) env_cols <- names(env_df)[env_cols]
+  if(!is.character(env_cols)) env_cols <- names(env_data)[env_cols]
 
   res <- list(env_cols = env_cols
-              , remove_always = remove_always
               , keep_always = if(!is.null(keep_always)) keep_always else NULL
               , thresh_corr = thresh_corr
-              , quant_rf_imp = quant_rf_imp
+              , thresh_NA = thresh_NA
               )
 
+  # always -------
+  res$remove_always <- env_cols[grepl(paste0(remove_always, collapse = "|"), env_cols)]
+
   # const -------
-  env_df_no_factor <- env_df %>%
+  env_df_no_factor <- env_data |>
      dplyr::mutate(dplyr::across(dplyr::where(is.factor)
                                  , as.numeric
                                  )
                    )
 
-  res$check_low_var <- env_df |>
+  res$check_low_var <- env_data |>
     dplyr::select(tidyselect::any_of(env_cols)) |>
-    caret::nearZeroVar(saveMetrics = TRUE) |>
+    caret::nearZeroVar(saveMetrics = TRUE
+                       , freqCut = 1000
+                       , uniqueCut = 0.5
+                       ) |>
     tibble::as_tibble(rownames = "env")
 
   res$remove_constant <- res$check_low_var$env[res$check_low_var$nzv]
 
-  res$env_corr <- env_df %>%
-      dplyr::select(tidyselect::any_of(env_cols)) %>%
-      dplyr::select(!tidyselect::any_of(res$remove_constant)) %>%
-      stats::cor(use = "complete.obs")
-
-  # rf -------
-  if(!is.null(quant_rf_imp)) {
-
-    rf_dat <- env_df %>%
-      dplyr::select(!tidyselect::any_of(c(res$remove_constant)))
-
-    y <- rf_dat %>%
-      dplyr::pull(!!rlang::ensym(y_col)) %>%
-      {if(y_col_factor) as.factor(.) else (.)}
-
-    x <- rf_dat %>%
-      dplyr::select(tidyselect::any_of(env_cols)) %>%
-      as.matrix()
-
-    tab <- table(y)
-    min_class <- min(tab)
-    classes <- length(tab)
-
-    res$rf <- randomForest::randomForest(
-      x = x
-      , y = y
-      , strata = y
-      , importance = TRUE
-      , sampsize = rep(min_class, classes)
-      )
-
-    res$rf_imp <- randomForest::importance(res$rf) %>%
-      tibble::as_tibble(rownames = "env") %>%
-      dplyr::arrange(!!rlang::ensym(imp_col)) %>%
-      dplyr::mutate(imp = !!rlang::ensym(imp_col) > stats::quantile(!!rlang::ensym(imp_col), probs = quant_rf_imp))
-
-    res$remove_rf <- res$rf_imp %>% dplyr::filter(!imp) %>% dplyr::pull(env)
-
-  } else res$remove_rf <- NULL
+  res$env_corr <- env_data |>
+      dplyr::select(tidyselect::any_of(env_cols)) |>
+      dplyr::select(!tidyselect::any_of(res$remove_constant)) |>
+      stats::cor(use = "pairwise.complete.obs")
 
   # corr -------
   if(!is.null(thresh_corr)) {
@@ -132,14 +89,35 @@ reduce_env <- function(env_df
                                                              ]
                                                 , cutoff = thresh_corr
                                                 , names = TRUE
+                                                , exact = TRUE
                                                 )
 
     }
 
   } else res$remove_corr <- NULL
 
+  # NA ----------
+  res$test_na <- env_data |>
+    tidyr::pivot_longer(cols = tidyselect::any_of(env_cols)) |>
+    dplyr::summarise(.by = name
+                     , nas = sum(is.na(value))
+                     , n = dplyr::n()
+                     , prop_na = nas / n
+                     )
+
+  if(!is.null(thresh_NA)) {
+
+    res$remove_na <- res$test_na$name[res$test_na$prop_na > thresh_NA]
+
+  } else res$remove_na <- NULL
+
   # remove-------
-  res$remove <- unique(c(res$remove_corr, res$remove_constant, res$remove_rf, remove_always))
+  res$remove <- unique(c(res$remove_always
+                         , res$remove_constant
+                         , res$remove_corr
+                         , res$remove_na
+                         )
+                       )
 
   if(!is.null(keep_always)) {
 
