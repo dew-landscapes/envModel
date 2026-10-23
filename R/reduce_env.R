@@ -11,8 +11,8 @@
 #' @param thresh_corr Numeric or `NULL`. Threshold correlation value above which
 #' a variable is flagged as correlated. Set to `NULL` to skip removal of
 #' any correlated variables.
-#' @param thresh_NA Numeric or `NULL`. Threshold proportion of `NA` values
-#' within a variable before it is removed. i.e. with a `thresh_NA` value of 0.1,
+#' @param thresh_na Numeric or `NULL`. Threshold proportion of `NA` values
+#' within a variable before it is removed. i.e. with a `thresh_na` value of 0.1,
 #' a variable with more than 10% `NA` values would be flagged for removal.
 #' @param remove_always Character. Any matches will always be removed (even if
 #' not correlated).
@@ -30,7 +30,7 @@
 #'  column above `thresh_corr`.}
 #'  \item{test_na}{tibble of results of testing each column for `NA` values}
 #'  \item{remove_NA}{character vector of columns to remove as their proportion
-#'  of `NA` values > `thresh_NA`}
+#'  of `NA` values > `thresh_na`}
 #'  \item{remove}{character vector of columns to remove from further
 #'  analysis, based on results from `reduce_env()`}
 #'  \item{keep}{character vector of `env_cols` that are not in `remove`}
@@ -41,17 +41,19 @@
 reduce_env <- function(env_data
                        , env_cols
                        , thresh_corr = 0.90
-                       , thresh_NA = 0.03
+                       , thresh_na = 0.03
                        , remove_always = c("lat", "long", "^id$")
                        , keep_always = NULL
                        ) {
 
   if(!is.character(env_cols)) env_cols <- names(env_data)[env_cols]
 
+  env_cols <- env_cols[env_cols %in% names(env_data)]
+
   res <- list(env_cols = env_cols
               , keep_always = if(!is.null(keep_always)) keep_always else NULL
               , thresh_corr = thresh_corr
-              , thresh_NA = thresh_NA
+              , thresh_na = thresh_na
               )
 
   # always -------
@@ -105,9 +107,9 @@ reduce_env <- function(env_data
                      , prop_na = nas / n
                      )
 
-  if(!is.null(thresh_NA)) {
+  if(!is.null(thresh_na)) {
 
-    res$remove_na <- res$test_na$name[res$test_na$prop_na > thresh_NA]
+    res$remove_na <- res$test_na$name[res$test_na$prop_na > thresh_na]
 
   } else res$remove_na <- NULL
 
