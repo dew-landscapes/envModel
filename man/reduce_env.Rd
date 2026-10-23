@@ -5,43 +5,28 @@
 \title{Reduce number of environmental variables}
 \usage{
 reduce_env(
-  env_df,
+  env_data,
   env_cols,
-  y_col = "pa",
-  y_col_factor = TRUE,
-  imp_col = "1",
   thresh_corr = 0.9,
-  quant_rf_imp = NULL,
-  remove_always = c("lat", "long"),
+  thresh_NA = 0.03,
+  remove_always = c("lat", "long", "^id$"),
   keep_always = NULL
 )
 }
 \arguments{
-\item{env_df}{Dataframe with environmental variables}
+\item{env_data}{Dataframe with environmental variables}
 
-\item{env_cols}{Numeric or character vector defining columns in env_df
+\item{env_cols}{Numeric or character vector defining columns in \code{env_data}
 that contain the variables to test for correlation. Correlation is found via
 \code{\link[caret:findCorrelation]{caret::findCorrelation()}}.}
-
-\item{y_col}{Character. Name of a column in \code{env_df} to test for
-'important' variables via \code{randomForest::randomForest()}. Not used if
-\code{quant_rf_imp} is \code{NULL}.}
-
-\item{y_col_factor}{Logical. Should \code{y_col} be considered a
-factor in \code{randomForest::randomForest()}? Thus classification rather than
-regression. Not used if \code{quant_rf_imp} is \code{NULL}.}
-
-\item{imp_col}{Character. Name of column in result of call to
-\code{randomForest::importance()} to use in deciding 'importance' of a variable.
-Not used if \code{quant_rf_imp} is \code{NULL}.}
 
 \item{thresh_corr}{Numeric or \code{NULL}. Threshold correlation value above which
 a variable is flagged as correlated. Set to \code{NULL} to skip removal of
 any correlated variables.}
 
-\item{quant_rf_imp}{Numeric. Quantile below which a variable is flagged as
-not important. Set to \code{NULL} to skip removal of variables with low random
-forest importance.}
+\item{thresh_NA}{Numeric or \code{NULL}. Threshold proportion of \code{NA} values
+within a variable before it is removed. i.e. with a \code{thresh_NA} value of 0.1,
+a variable with more than 10\% \code{NA} values would be flagged for removal.}
 
 \item{remove_always}{Character. Any matches will always be removed (even if
 not correlated).}
@@ -55,22 +40,21 @@ itemize{
 \item{env_cols}{as provided}
 \item{remove_always}{as provided}
 \item{keep_always}{as provided}
-\item{remove_constant}{columns with only one value}
-\item{env_corr}{result of applying \code{\link[stats:cor]{stats::cor()}} to \code{env_df[,env_cols]}}
-\item{remove_corr}{column names in \code{env_df} that are correlated with another
+\item{remove_constant}{columns with only one value (or near-zero variance)}
+\item{env_corr}{result of applying \code{\link[stats:cor]{stats::cor()}} to \code{env_data[,env_cols]}}
+\item{remove_corr}{column names in \code{env_data} that are correlated with another
 column above \code{thresh_corr}.}
-\item{rf}{result of applying \code{randomforest::randomforest()} in the form of
-y_col ~ env_cols}
-\item{rf_vi}{variable importance from rf}
+\item{test_na}{tibble of results of testing each column for \code{NA} values}
+\item{remove_NA}{character vector of columns to remove as their proportion
+of \code{NA} values > \code{thresh_NA}}
 \item{remove}{character vector of columns to remove from further
 analysis, based on results from \code{reduce_env()}}
+\item{keep}{character vector of \code{env_cols} that are not in \code{remove}}
 }
 }
 \description{
-Given a data frame of environmental variables, flag correlated, and/or
-important variables as precursor to further analysis. Importance is taken
-from the variable importance result of \code{randomForest::randomForest()}. Thus
-it is not deterministic and can vary between runs.
+Given a data frame of environmental data flag variables that: are correlated;
+have near-zero variance; and have a high proportion of \code{NA} values.
 }
 \examples{
 

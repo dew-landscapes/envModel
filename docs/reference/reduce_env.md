@@ -1,59 +1,34 @@
 # Reduce number of environmental variables
 
-Given a data frame of environmental variables, flag correlated, and/or
-important variables as precursor to further analysis. Importance is
-taken from the variable importance result of
-[`randomForest::randomForest()`](https://rdrr.io/pkg/randomForest/man/randomForest.html).
-Thus it is not deterministic and can vary between runs.
+Given a data frame of environmental data flag variables that: are
+correlated; have near-zero variance; and have a high proportion of `NA`
+values.
 
 ## Usage
 
 ``` r
 reduce_env(
-  env_df,
+  env_data,
   env_cols,
-  y_col = "pa",
-  y_col_factor = TRUE,
-  imp_col = "1",
   thresh_corr = 0.9,
-  quant_rf_imp = NULL,
-  remove_always = c("lat", "long"),
+  thresh_NA = 0.03,
+  remove_always = c("lat", "long", "^id$"),
   keep_always = NULL
 )
 ```
 
 ## Arguments
 
-- env_df:
+- env_data:
 
   Dataframe with environmental variables
 
 - env_cols:
 
-  Numeric or character vector defining columns in env_df that contain
-  the variables to test for correlation. Correlation is found via
+  Numeric or character vector defining columns in `env_data` that
+  contain the variables to test for correlation. Correlation is found
+  via
   [`caret::findCorrelation()`](https://rdrr.io/pkg/caret/man/findCorrelation.html).
-
-- y_col:
-
-  Character. Name of a column in `env_df` to test for 'important'
-  variables via
-  [`randomForest::randomForest()`](https://rdrr.io/pkg/randomForest/man/randomForest.html).
-  Not used if `quant_rf_imp` is `NULL`.
-
-- y_col_factor:
-
-  Logical. Should `y_col` be considered a factor in
-  [`randomForest::randomForest()`](https://rdrr.io/pkg/randomForest/man/randomForest.html)?
-  Thus classification rather than regression. Not used if `quant_rf_imp`
-  is `NULL`.
-
-- imp_col:
-
-  Character. Name of column in result of call to
-  [`randomForest::importance()`](https://rdrr.io/pkg/randomForest/man/importance.html)
-  to use in deciding 'importance' of a variable. Not used if
-  `quant_rf_imp` is `NULL`.
 
 - thresh_corr:
 
@@ -61,11 +36,11 @@ reduce_env(
   is flagged as correlated. Set to `NULL` to skip removal of any
   correlated variables.
 
-- quant_rf_imp:
+- thresh_NA:
 
-  Numeric. Quantile below which a variable is flagged as not important.
-  Set to `NULL` to skip removal of variables with low random forest
-  importance.
+  Numeric or `NULL`. Threshold proportion of `NA` values within a
+  variable before it is removed. i.e. with a `thresh_NA` value of 0.1, a
+  variable with more than 10% `NA` values would be flagged for removal.
 
 - remove_always:
 
@@ -127,9 +102,10 @@ result <- reduce_env(pb
                      )
 
 names(result)
-#>  [1] "env_cols"        "remove_always"   "keep_always"     "thresh_corr"    
-#>  [5] "quant_rf_imp"    "check_low_var"   "remove_constant" "env_corr"       
-#>  [9] "remove_corr"     "remove"          "keep"           
+#>  [1] "env_cols"        "keep_always"     "thresh_corr"     "thresh_NA"      
+#>  [5] "remove_always"   "check_low_var"   "remove_constant" "env_corr"       
+#>  [9] "remove_corr"     "test_na"         "remove_na"       "remove"         
+#> [13] "keep"           
 
 result$remove_corr
 #> [1] "bio6"  "bio1"  "bio16"
@@ -147,21 +123,22 @@ result <- reduce_env(pb
                      , thresh_corr = NULL
                      , quant_rf_imp = 0.1
                      )
+#> Error in reduce_env(pb, env_cols = names(predictors), y_col = "pa", thresh_corr = NULL,     quant_rf_imp = 0.1): unused arguments (y_col = "pa", quant_rf_imp = 0.1)
 
 names(result)
-#>  [1] "env_cols"        "remove_always"   "keep_always"     "thresh_corr"    
-#>  [5] "quant_rf_imp"    "check_low_var"   "remove_constant" "env_corr"       
-#>  [9] "rf"              "rf_imp"          "remove_rf"       "remove"         
+#>  [1] "env_cols"        "keep_always"     "thresh_corr"     "thresh_NA"      
+#>  [5] "remove_always"   "check_low_var"   "remove_constant" "env_corr"       
+#>  [9] "remove_corr"     "test_na"         "remove_na"       "remove"         
 #> [13] "keep"           
 
 result$remove_corr
-#> NULL
+#> [1] "bio6"  "bio1"  "bio16"
 
 result$remove_rf
-#> [1] "bio9"
+#> NULL
 
 result$keep
-#> [1] "bio1"  "bio5"  "bio6"  "bio7"  "bio8"  "bio12" "bio16" "bio17"
+#> [1] "bio5"  "bio7"  "bio8"  "bio9"  "bio12" "bio17"
 
 # use both
 result <- reduce_env(pb
@@ -170,19 +147,20 @@ result <- reduce_env(pb
                      , thresh_corr = 0.95
                      , quant_rf_imp = 0.2
                      )
+#> Error in reduce_env(pb, env_cols = names(predictors), y_col = "pa", thresh_corr = 0.95,     quant_rf_imp = 0.2): unused arguments (y_col = "pa", quant_rf_imp = 0.2)
 
 names(result)
-#>  [1] "env_cols"        "remove_always"   "keep_always"     "thresh_corr"    
-#>  [5] "quant_rf_imp"    "check_low_var"   "remove_constant" "env_corr"       
-#>  [9] "rf"              "rf_imp"          "remove_rf"       "remove_corr"    
-#> [13] "remove"          "keep"           
+#>  [1] "env_cols"        "keep_always"     "thresh_corr"     "thresh_NA"      
+#>  [5] "remove_always"   "check_low_var"   "remove_constant" "env_corr"       
+#>  [9] "remove_corr"     "test_na"         "remove_na"       "remove"         
+#> [13] "keep"           
 
 result$remove_corr
-#> [1] "bio1"
+#> [1] "bio6"  "bio1"  "bio16"
 
 result$remove_rf
-#> [1] "bio9" "bio1"
+#> NULL
 
 result$keep
-#> [1] "bio5"  "bio6"  "bio7"  "bio8"  "bio12" "bio16" "bio17"
+#> [1] "bio5"  "bio7"  "bio8"  "bio9"  "bio12" "bio17"
 ```
