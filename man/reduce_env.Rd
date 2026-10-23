@@ -8,7 +8,7 @@ reduce_env(
   env_data,
   env_cols,
   thresh_corr = 0.9,
-  thresh_NA = 0.03,
+  thresh_na = 0.03,
   remove_always = c("lat", "long", "^id$"),
   keep_always = NULL
 )
@@ -24,8 +24,8 @@ that contain the variables to test for correlation. Correlation is found via
 a variable is flagged as correlated. Set to \code{NULL} to skip removal of
 any correlated variables.}
 
-\item{thresh_NA}{Numeric or \code{NULL}. Threshold proportion of \code{NA} values
-within a variable before it is removed. i.e. with a \code{thresh_NA} value of 0.1,
+\item{thresh_na}{Numeric or \code{NULL}. Threshold proportion of \code{NA} values
+within a variable before it is removed. i.e. with a \code{thresh_na} value of 0.1,
 a variable with more than 10\% \code{NA} values would be flagged for removal.}
 
 \item{remove_always}{Character. Any matches will always be removed (even if
@@ -46,7 +46,7 @@ itemize{
 column above \code{thresh_corr}.}
 \item{test_na}{tibble of results of testing each column for \code{NA} values}
 \item{remove_NA}{character vector of columns to remove as their proportion
-of \code{NA} values > \code{thresh_NA}}
+of \code{NA} values > \code{thresh_na}}
 \item{remove}{character vector of columns to remove from further
 analysis, based on results from \code{reduce_env()}}
 \item{keep}{character vector of \code{env_cols} that are not in \code{remove}}

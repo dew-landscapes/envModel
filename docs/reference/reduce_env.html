@@ -45,7 +45,7 @@ have near-zero variance; and have a high proportion of <code>NA</code> values.</
 <span>  <span class="va">env_data</span>,</span>
 <span>  <span class="va">env_cols</span>,</span>
 <span>  thresh_corr <span class="op">=</span> <span class="fl">0.9</span>,</span>
-<span>  thresh_NA <span class="op">=</span> <span class="fl">0.03</span>,</span>
+<span>  thresh_na <span class="op">=</span> <span class="fl">0.03</span>,</span>
 <span>  remove_always <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lat"</span>, <span class="st">"long"</span>, <span class="st">"^id$"</span><span class="op">)</span>,</span>
 <span>  keep_always <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -71,9 +71,9 @@ a variable is flagged as correlated. Set to <code>NULL</code> to skip removal of
 any correlated variables.</p></dd>
 
 
-<dt id="arg-thresh-na">thresh_NA<a class="anchor" aria-label="anchor" href="#arg-thresh-na"></a></dt>
+<dt id="arg-thresh-na">thresh_na<a class="anchor" aria-label="anchor" href="#arg-thresh-na"></a></dt>
 <dd><p>Numeric or <code>NULL</code>. Threshold proportion of <code>NA</code> values
-within a variable before it is removed. i.e. with a <code>thresh_NA</code> value of 0.1,
+within a variable before it is removed. i.e. with a <code>thresh_na</code> value of 0.1,
 a variable with more than 10% <code>NA</code> values would be flagged for removal.</p></dd>
 
 
@@ -139,7 +139,7 @@ itemize</p>
 <span class="r-in"><span>                     <span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "env_cols"        "keep_always"     "thresh_corr"     "thresh_NA"      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "env_cols"        "keep_always"     "thresh_corr"     "thresh_na"      </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "remove_always"   "check_low_var"   "remove_constant" "env_corr"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "remove_corr"     "test_na"         "remove_na"       "remove"         </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [13] "keep"           </span>
@@ -163,7 +163,7 @@ itemize</p>
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in reduce_env(pb, env_cols = names(predictors), y_col = "pa", thresh_corr = NULL,     quant_rf_imp = 0.1):</span> unused arguments (y_col = "pa", quant_rf_imp = 0.1)</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "env_cols"        "keep_always"     "thresh_corr"     "thresh_NA"      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "env_cols"        "keep_always"     "thresh_corr"     "thresh_na"      </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "remove_always"   "check_low_var"   "remove_constant" "env_corr"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "remove_corr"     "test_na"         "remove_na"       "remove"         </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [13] "keep"           </span>
@@ -187,7 +187,7 @@ itemize</p>
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in reduce_env(pb, env_cols = names(predictors), y_col = "pa", thresh_corr = 0.95,     quant_rf_imp = 0.2):</span> unused arguments (y_col = "pa", quant_rf_imp = 0.2)</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "env_cols"        "keep_always"     "thresh_corr"     "thresh_NA"      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "env_cols"        "keep_always"     "thresh_corr"     "thresh_na"      </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "remove_always"   "check_low_var"   "remove_constant" "env_corr"       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "remove_corr"     "test_na"         "remove_na"       "remove"         </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [13] "keep"           </span>

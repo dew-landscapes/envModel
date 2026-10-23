@@ -11,7 +11,7 @@ reduce_env(
   env_data,
   env_cols,
   thresh_corr = 0.9,
-  thresh_NA = 0.03,
+  thresh_na = 0.03,
   remove_always = c("lat", "long", "^id$"),
   keep_always = NULL
 )
@@ -36,10 +36,10 @@ reduce_env(
   is flagged as correlated. Set to `NULL` to skip removal of any
   correlated variables.
 
-- thresh_NA:
+- thresh_na:
 
   Numeric or `NULL`. Threshold proportion of `NA` values within a
-  variable before it is removed. i.e. with a `thresh_NA` value of 0.1, a
+  variable before it is removed. i.e. with a `thresh_na` value of 0.1, a
   variable with more than 10% `NA` values would be flagged for removal.
 
 - remove_always:
@@ -102,7 +102,7 @@ result <- reduce_env(pb
                      )
 
 names(result)
-#>  [1] "env_cols"        "keep_always"     "thresh_corr"     "thresh_NA"      
+#>  [1] "env_cols"        "keep_always"     "thresh_corr"     "thresh_na"      
 #>  [5] "remove_always"   "check_low_var"   "remove_constant" "env_corr"       
 #>  [9] "remove_corr"     "test_na"         "remove_na"       "remove"         
 #> [13] "keep"           
@@ -126,7 +126,7 @@ result <- reduce_env(pb
 #> Error in reduce_env(pb, env_cols = names(predictors), y_col = "pa", thresh_corr = NULL,     quant_rf_imp = 0.1): unused arguments (y_col = "pa", quant_rf_imp = 0.1)
 
 names(result)
-#>  [1] "env_cols"        "keep_always"     "thresh_corr"     "thresh_NA"      
+#>  [1] "env_cols"        "keep_always"     "thresh_corr"     "thresh_na"      
 #>  [5] "remove_always"   "check_low_var"   "remove_constant" "env_corr"       
 #>  [9] "remove_corr"     "test_na"         "remove_na"       "remove"         
 #> [13] "keep"           
@@ -150,7 +150,7 @@ result <- reduce_env(pb
 #> Error in reduce_env(pb, env_cols = names(predictors), y_col = "pa", thresh_corr = 0.95,     quant_rf_imp = 0.2): unused arguments (y_col = "pa", quant_rf_imp = 0.2)
 
 names(result)
-#>  [1] "env_cols"        "keep_always"     "thresh_corr"     "thresh_NA"      
+#>  [1] "env_cols"        "keep_always"     "thresh_corr"     "thresh_na"      
 #>  [5] "remove_always"   "check_low_var"   "remove_constant" "env_corr"       
 #>  [9] "remove_corr"     "test_na"         "remove_na"       "remove"         
 #> [13] "keep"           
