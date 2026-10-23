@@ -11,6 +11,7 @@ make_env_clust_df(
   context = "cell",
   min_sites = 0,
   df_env,
+  remove_na = FALSE,
   add_clust = NULL,
   add_clust_col = "cluster",
   add_env,
@@ -40,6 +41,11 @@ make_env_clust_df(
 - df_env:
 
   Dataframe with 'site' and associated env values for floristic 'sites'.
+
+- remove_na:
+
+  Logical. If `TRUE` ensure that all rows have completed cases with no
+  `NA` values.
 
 - add_clust:
 
