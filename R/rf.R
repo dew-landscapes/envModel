@@ -4,7 +4,6 @@ make_rf_quick <- function(x_df
                           , y_vec
                           , trees = 499
                           , cl_obj = NULL
-                          , do_imp = FALSE
                           , ...
                           ) {
 
@@ -30,7 +29,6 @@ make_rf_quick <- function(x_df
                      ) %dopar%
       randomForest::randomForest(x = x_df
                                  , y = y_vec
-                                 , importance = do_imp
                                  , ntree = ntree
                                  , ...
                                  )
@@ -39,7 +37,6 @@ make_rf_quick <- function(x_df
 
     randomForest::randomForest(x = x_df
                                , y = y_vec
-                               , importance = do_imp
                                , ntree = trees
                                , ...
                                )
@@ -71,14 +68,14 @@ make_rf_quick <- function(x_df
 #' `stopping_tolerance`?
 #' @param test_data Either `FALSE` to test against the training data, or new
 #' data in same format as `env_df`, against which to calculate metrics.
-#' @param do_imp Logical. Passed to `importance` argument of
-#' `randomForest::randomForest()`.
 #' @param keep_rf Logical. If true, `randomForest` object will be included in
 #' output. Defaults to `FALSE` to save memory.
 #' @param out_file Optional name (and path) of file to save results
 #' @param force_new Logical. If `out_file` already exists, should that file be
 #' loaded (`FALSE`) or run again (`TRUE`) from scratch (and written over).
 #' @param ... Passed (via `make_rf_quick()`) to `randomForest::randomForest()`.
+#' Note the `ntree` argument is already passed via `trees_start` and/or
+#' `trees_add` so do not pass via the dots.
 #'
 #' @return
 #' @export
@@ -96,15 +93,12 @@ run_iterative_rf <- function(env_df
                              , stopping_tolerance = 0.005
                              , stopping_runs = 3
                              , test_data = FALSE
-                             , do_imp = FALSE
                              , keep_rf = FALSE
                              , out_file = NULL
                              , force_new = FALSE
                              , verbose = base::interactive()
                              , ...
                              ) {
-
-  .do_imp = do_imp
 
   go_time <- Sys.time()
 
@@ -173,7 +167,6 @@ run_iterative_rf <- function(env_df
                         , y
                         , trees = trees_start
                         , if(rf_cores > 1) cl_obj = cl
-                        , do_imp = .do_imp
                         , ...
                         )
 
@@ -212,7 +205,6 @@ run_iterative_rf <- function(env_df
                                , y
                                , trees = trees_add
                                , if(rf_cores > 1) cl_obj = cl
-                               , do_imp = .do_imp
                                , ...
                                )
 
