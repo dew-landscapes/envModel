@@ -17,7 +17,6 @@ run_iterative_rf(
   stopping_tolerance = 0.005,
   stopping_runs = 3,
   test_data = FALSE,
-  do_imp = FALSE,
   keep_rf = FALSE,
   out_file = NULL,
   force_new = FALSE,
@@ -56,9 +55,6 @@ predictions that change between runs) or any metric returned by a summary of
 \item{test_data}{Either \code{FALSE} to test against the training data, or new
 data in same format as \code{env_df}, against which to calculate metrics.}
 
-\item{do_imp}{Logical. Passed to \code{importance} argument of
-\code{randomForest::randomForest()}.}
-
 \item{keep_rf}{Logical. If true, \code{randomForest} object will be included in
 output. Defaults to \code{FALSE} to save memory.}
 
@@ -67,7 +63,9 @@ output. Defaults to \code{FALSE} to save memory.}
 \item{force_new}{Logical. If \code{out_file} already exists, should that file be
 loaded (\code{FALSE}) or run again (\code{TRUE}) from scratch (and written over).}
 
-\item{...}{Passed (via \code{make_rf_quick()}) to \code{randomForest::randomForest()}.}
+\item{...}{Passed (via \code{make_rf_quick()}) to \code{randomForest::randomForest()}.
+Note the \code{ntree} argument is already passed via \code{trees_start} and/or
+\code{trees_add} so do not pass via the dots.}
 }
 \description{
 Trees are added until predictions stabilise or a maximum number of trees is

@@ -54,7 +54,6 @@ reached.</p>
 <span>  stopping_tolerance <span class="op">=</span> <span class="fl">0.005</span>,</span>
 <span>  stopping_runs <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  test_data <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  do_imp <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  keep_rf <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  out_file <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  force_new <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -121,11 +120,6 @@ predictions that change between runs) or any metric returned by a summary of
 data in same format as <code>env_df</code>, against which to calculate metrics.</p></dd>
 
 
-<dt id="arg-do-imp">do_imp<a class="anchor" aria-label="anchor" href="#arg-do-imp"></a></dt>
-<dd><p>Logical. Passed to <code>importance</code> argument of
-<code><a href="https://rdrr.io/pkg/randomForest/man/randomForest.html" class="external-link">randomForest::randomForest()</a></code>.</p></dd>
-
-
 <dt id="arg-keep-rf">keep_rf<a class="anchor" aria-label="anchor" href="#arg-keep-rf"></a></dt>
 <dd><p>Logical. If true, <code>randomForest</code> object will be included in
 output. Defaults to <code>FALSE</code> to save memory.</p></dd>
@@ -141,7 +135,9 @@ loaded (<code>FALSE</code>) or run again (<code>TRUE</code>) from scratch (and w
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Passed (via <code>make_rf_quick()</code>) to <code><a href="https://rdrr.io/pkg/randomForest/man/randomForest.html" class="external-link">randomForest::randomForest()</a></code>.</p></dd>
+<dd><p>Passed (via <code>make_rf_quick()</code>) to <code><a href="https://rdrr.io/pkg/randomForest/man/randomForest.html" class="external-link">randomForest::randomForest()</a></code>.
+Note the <code>ntree</code> argument is already passed via <code>trees_start</code> and/or
+<code>trees_add</code> so do not pass via the dots.</p></dd>
 
 </dl></div>
 

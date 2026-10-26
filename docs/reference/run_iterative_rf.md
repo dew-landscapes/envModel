@@ -19,7 +19,6 @@ run_iterative_rf(
   stopping_tolerance = 0.005,
   stopping_runs = 3,
   test_data = FALSE,
-  do_imp = FALSE,
   keep_rf = FALSE,
   out_file = NULL,
   force_new = FALSE,
@@ -83,11 +82,6 @@ run_iterative_rf(
   Either `FALSE` to test against the training data, or new data in same
   format as `env_df`, against which to calculate metrics.
 
-- do_imp:
-
-  Logical. Passed to `importance` argument of
-  [`randomForest::randomForest()`](https://rdrr.io/pkg/randomForest/man/randomForest.html).
-
 - keep_rf:
 
   Logical. If true, `randomForest` object will be included in output.
@@ -106,3 +100,5 @@ run_iterative_rf(
 
   Passed (via `make_rf_quick()`) to
   [`randomForest::randomForest()`](https://rdrr.io/pkg/randomForest/man/randomForest.html).
+  Note the `ntree` argument is already passed via `trees_start` and/or
+  `trees_add` so do not pass via the dots.
