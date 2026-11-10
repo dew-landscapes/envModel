@@ -60,7 +60,7 @@ reduce_env <- function(env_data
   res$remove_always <- env_cols[grepl(paste0(remove_always, collapse = "|"), env_cols)]
 
   # const -------
-  env_df_no_factor <- env_data |>
+  env_data <- env_data |>
      dplyr::mutate(dplyr::across(dplyr::where(is.factor)
                                  , as.numeric
                                  )
@@ -68,10 +68,7 @@ reduce_env <- function(env_data
 
   res$check_low_var <- env_data |>
     dplyr::select(tidyselect::any_of(env_cols)) |>
-    caret::nearZeroVar(saveMetrics = TRUE
-                       , freqCut = 1000
-                       , uniqueCut = 0.5
-                       ) |>
+    caret::nearZeroVar(saveMetrics = TRUE) |>
     tibble::as_tibble(rownames = "env")
 
   res$remove_constant <- res$check_low_var$env[res$check_low_var$nzv]
