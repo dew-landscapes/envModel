@@ -73,19 +73,22 @@ reduce_env <- function(env_data
 
   res$remove_constant <- res$check_low_var$env[res$check_low_var$nzv]
 
-  res$env_corr <- env_data |>
+  base::suppressWarnings(
+    res$env_corr <- env_data |>
       dplyr::select(tidyselect::any_of(env_cols)) |>
       dplyr::select(!tidyselect::any_of(res$remove_constant)) |>
       stats::cor(use = "pairwise.complete.obs")
+    )
 
   # corr -------
   if(!is.null(thresh_corr)) {
 
     if(dim(res$env_corr)[2]) {
 
-      res$remove_corr <- caret::findCorrelation(res$env_corr[!rownames(res$env_corr) %in% res$remove_constant
-                                                             ,!colnames(res$env_corr) %in% res$remove_constant
-                                                             ]
+      # Set undefined pairwise correlations to 0 so findCorrelation won't flag the pair
+      res$env_corr[is.na(res$env_corr)] <- 0
+
+      res$remove_corr <- caret::findCorrelation(res$env_corr
                                                 , cutoff = thresh_corr
                                                 , names = TRUE
                                                 , exact = TRUE
