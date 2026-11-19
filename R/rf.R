@@ -263,7 +263,7 @@ run_iterative_rf <- function(env_df
 
     }
 
-    if(! result$metrics$thresh[[nrow(result$metrics)]]) warning(rf$ntree, " > ", trees_max, " stopping without meeting stopping rules")
+    if(!isTRUE(tail(result$metrics$thresh, 1))) warning(rf$ntree, " > ", trees_max, " stopping without meeting stopping rules")
 
     result$testing <- if(isFALSE(test_data)) "internal" else "new data"
 
