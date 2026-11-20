@@ -76,7 +76,9 @@ reduce_env <- function(env_data
   base::suppressWarnings(
     res$env_corr <- env_data |>
       dplyr::select(tidyselect::any_of(env_cols)) |>
-      dplyr::select(!tidyselect::any_of(res$remove_constant)) |>
+      dplyr::select(!tidyselect::any_of(res$remove_constant)
+                    , !tidyselect::any_of(res$remove_always)
+                    ) |>
       stats::cor(use = "pairwise.complete.obs")
     )
 
